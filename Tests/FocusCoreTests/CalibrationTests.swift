@@ -77,3 +77,21 @@ private func samples(at p: CGPoint, yaw: Double, count: Int = 10) -> [GazeSample
     let cal = try #require(CalibrationBuilder.build(targets: nanSamples, minConfidence: 0.5))
     #expect(cal.map != nil)
 }
+
+@Test func buildIgnoresNonFinitePoseInMedian() throws {
+    // Half of each target's confident, finite-raw samples have a NaN yaw. If `build` doesn't
+    // also filter on pose finiteness, `median` mixes NaN into the pose computation and
+    // `sorted()` over NaN is unordered, so the resulting pose is not reliably finite.
+    var withNaNYaw = targets.map { ($0, samples(at: $0, yaw: 0.3)) }
+    for i in withNaNYaw.indices {
+        for j in withNaNYaw[i].1.indices where j % 2 == 0 {
+            withNaNYaw[i].1[j].pose.yaw = Double.nan
+        }
+    }
+    let cal = try #require(CalibrationBuilder.build(targets: withNaNYaw, minConfidence: 0.5))
+    #expect(cal.pose.yaw.isFinite)
+    #expect(cal.pose.yaw == 0.3)
+    #expect(cal.pose.pitch == 0)
+    #expect(cal.pose.faceX == 0.5)
+    #expect(cal.pose.faceY == 0.5)
+}

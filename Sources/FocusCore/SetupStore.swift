@@ -1,7 +1,7 @@
 import Foundation
 
 /// One JSON file per setup. Unreadable files are renamed `.broken` so the rest still loads.
-public struct SetupStore {
+public struct SetupStore: Sendable {
     public let directory: URL
 
     public init(directory: URL) { self.directory = directory }
