@@ -1,0 +1,34 @@
+import Foundation
+#if canImport(CoreGraphics)
+import CoreGraphics
+#endif
+
+/// Head pose + face position in the camera image. Angles in radians, face in [0,1].
+public struct PoseFeature: Codable, Sendable, Equatable {
+    public var yaw: Double
+    public var pitch: Double
+    public var faceX: Double
+    public var faceY: Double
+
+    public init(yaw: Double, pitch: Double, faceX: Double, faceY: Double) {
+        self.yaw = yaw; self.pitch = pitch; self.faceX = faceX; self.faceY = faceY
+    }
+
+    // ponytail: unweighted Euclidean over radians and [0,1]; add per-axis weights if pitch noise hurts stacked screens.
+    public func distance(to o: PoseFeature) -> Double {
+        let d = [yaw - o.yaw, pitch - o.pitch, faceX - o.faceX, faceY - o.faceY]
+        return d.reduce(0) { $0 + $1 * $1 }.squareRoot()
+    }
+}
+
+/// One camera frame's output from GazeKit (plan 2).
+public struct GazeSample: Sendable {
+    public var time: Double        // seconds, monotonic
+    public var raw: CGPoint        // BlazeGaze point before calibration
+    public var pose: PoseFeature
+    public var confidence: Double  // 0…1
+
+    public init(time: Double, raw: CGPoint, pose: PoseFeature, confidence: Double) {
+        self.time = time; self.raw = raw; self.pose = pose; self.confidence = confidence
+    }
+}
