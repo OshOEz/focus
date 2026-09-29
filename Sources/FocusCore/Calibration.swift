@@ -54,16 +54,14 @@ public enum CalibrationBuilder {
         for (target, samples) in targets {
             let good = samples.filter {
                 $0.confidence >= minConfidence && $0.raw.x.isFinite && $0.raw.y.isFinite
-                    && [$0.pose.yaw, $0.pose.pitch, $0.pose.faceX, $0.pose.faceY].allSatisfy(\.isFinite)
+                    && $0.pose.isFinite
             }
             guard good.count >= minSamplesPerTarget else { continue }
             points.append(CalibrationPoint(
                 input: CGPoint(x: median(good.map { $0.raw.x }), y: median(good.map { $0.raw.y })), target: target))
             poses += good.map(\.pose)
         }
-        guard points.count >= 3 else { return nil }
-        let pose = PoseFeature(yaw: median(poses.map(\.yaw)), pitch: median(poses.map(\.pitch)),
-                               faceX: median(poses.map(\.faceX)), faceY: median(poses.map(\.faceY)))
+        guard points.count >= 3, let pose = PoseFeature.median(of: poses) else { return nil }
         return DisplayCalibration(pose: pose, calibrationPoints: points)
     }
 }

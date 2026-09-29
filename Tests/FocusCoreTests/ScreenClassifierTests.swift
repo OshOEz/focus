@@ -37,3 +37,14 @@ private func classifier() -> ScreenClassifier {
     c.centroids["L"] = nil   // display unplugged / calibration dropped
     #expect(c.classify(pose(0.1)) == "R")
 }
+
+@Test func poseMedianIgnoresNonFinitePoses() throws {
+    let poses = [pose(0.1), pose(0.3), PoseFeature(yaw: .nan, pitch: 0, faceX: 0.5, faceY: 0.5), pose(0.2)]
+    let m = try #require(PoseFeature.median(of: poses))
+    #expect(m.yaw == 0.2 && m.pitch == 0 && m.faceX == 0.5)
+}
+
+@Test func poseMedianOfNothingUsableIsNil() {
+    #expect(PoseFeature.median(of: []) == nil)
+    #expect(PoseFeature.median(of: [PoseFeature(yaw: .infinity, pitch: 0, faceX: 0, faceY: 0)]) == nil)
+}

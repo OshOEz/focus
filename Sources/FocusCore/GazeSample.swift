@@ -32,3 +32,15 @@ public struct GazeSample: Sendable {
         self.time = time; self.raw = raw; self.pose = pose; self.confidence = confidence
     }
 }
+
+extension PoseFeature {
+    public var isFinite: Bool { yaw.isFinite && pitch.isFinite && faceX.isFinite && faceY.isFinite }
+
+    /// Component-wise median of the finite poses; nil when there are none.
+    public static func median(of poses: [PoseFeature]) -> PoseFeature? {
+        let ok = poses.filter(\.isFinite)
+        guard !ok.isEmpty else { return nil }
+        return PoseFeature(yaw: FocusCore.median(ok.map(\.yaw)), pitch: FocusCore.median(ok.map(\.pitch)),
+                           faceX: FocusCore.median(ok.map(\.faceX)), faceY: FocusCore.median(ok.map(\.faceY)))
+    }
+}
