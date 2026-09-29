@@ -1,0 +1,1796 @@
+{
+  "layer_shapes" : {
+    "conv2d_11\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "p_re_lu_25\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "depthwise_conv2d_3\/depthwise_conv2dx" : {
+      "k" : 32,
+      "w" : 48,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "conv2d_15\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "conv2d_12\/conv2d" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "conv2d_6\/conv2d" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "p_re_lu_13\/Maximum" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "p_re_lu_16\/mul" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_18" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_13\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "conv2d_3" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "transpose_49" : {
+      "k" : 128,
+      "w" : 12,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "max_pool_0" : {
+      "k" : 16,
+      "w" : 48,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "transpose_79" : {
+      "k" : 32,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "depthwise_conv2d_23\/depthwise_conv2dx" : {
+      "k" : 32,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_3\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "conv2d_3\/conv2dx" : {
+      "k" : 32,
+      "w" : 48,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "conv2d_14\/conv2dx" : {
+      "k" : 128,
+      "w" : 6,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "conv2d_8\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "p_re_lu_7\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "channel_padding" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "conv2d_8" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "p_re_lu_12\/Maximum" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "transpose_75" : {
+      "k" : 128,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_17\/conv2d" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_28\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "p_re_lu_26\/mul" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_30\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 1,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "depthwise_conv2d_15\/depthwise_conv2dx" : {
+      "k" : 128,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "transpose_73" : {
+      "k" : 128,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_10\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "conv2d_11\/conv2dx" : {
+      "k" : 128,
+      "w" : 12,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "input_1" : {
+      "k" : 192,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 192
+    },
+    "transpose_1" : {
+      "k" : 3,
+      "w" : 192,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 192
+    },
+    "p_re_lu_11\/Maximum" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "conv2d_17\/conv2dx" : {
+      "k" : 128,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_19\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "p_re_lu_18\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "conv2d_9\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "p_re_lu_19\/mul" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_12" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "add_10" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "conv2d_27" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "max_pool_5" : {
+      "k" : 128,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_27\/conv2dx" : {
+      "k" : 128,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_7\/conv2d" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "p_re_lu_12\/mul" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "conv2d_14\/conv2d" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "depthwise_conv2d_1\/depthwise_conv2dx" : {
+      "k" : 16,
+      "w" : 96,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "conv2d_12\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "p_re_lu_15\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "conv2d_17" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "depthwise_conv2d_11\/depthwise_conv2dx" : {
+      "k" : 128,
+      "w" : 6,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "conv2d_1" : {
+      "k" : 96,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "conv2d_28\/conv2d" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_8\/mul" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "conv2d_1\/conv2d" : {
+      "k" : 96,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "p_re_lu_1\/Maximum" : {
+      "k" : 96,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "p_re_lu_4\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "add_11" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "conv2d_6" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "p_re_lu_6\/mul" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "add_1" : {
+      "k" : 96,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "conv2d\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "conv2d_19\/conv2d" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_7\/Maximum" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "conv2d_5\/conv2dx" : {
+      "k" : 32,
+      "w" : 48,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "depthwise_conv2d_8\/depthwise_conv2dx" : {
+      "k" : 64,
+      "w" : 12,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "conv2d_29\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "transpose_20" : {
+      "k" : 32,
+      "w" : 48,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "p_re_lu_10\/Maximum" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "p_re_lu_27\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "max_pool_2" : {
+      "k" : 64,
+      "w" : 12,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "p_re_lu_4\/mul" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "p_re_lu\/mul" : {
+      "k" : 96,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "p_re_lu_15\/mul" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "add_2" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "p_re_lu_4\/Maximum" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "conv2d_16\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "depthwise_conv2d_16\/depthwise_conv2dx" : {
+      "k" : 128,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_8\/conv2d" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "conv2d_11" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "p_re_lu_2\/mul" : {
+      "k" : 96,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "depthwise_conv2d_6\/depthwise_conv2dx" : {
+      "k" : 64,
+      "w" : 24,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "add_12" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "add_3" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "conv2d_7\/conv2dx" : {
+      "k" : 64,
+      "w" : 24,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "conv2d_16\/conv2d" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_25\/mul" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_8\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "conv2d_20\/conv2d" : {
+      "k" : 1,
+      "w" : 1404,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 1
+    },
+    "p_re_lu_12\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "max_pooling2d_6" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_2\/conv2d" : {
+      "k" : 96,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "transpose_67" : {
+      "k" : 128,
+      "w" : 6,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "conv2d_16" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_30" : {
+      "k" : 1,
+      "w" : 1,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 1
+    },
+    "conv2d_18\/conv2dx" : {
+      "k" : 32,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "transpose_65" : {
+      "k" : 128,
+      "w" : 6,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "transpose_95" : {
+      "k" : 32,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_11\/conv2d" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "add_4" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "transpose_33" : {
+      "k" : 64,
+      "w" : 24,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "conv2d_4" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "p_re_lu_18\/mul" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "transpose_91" : {
+      "k" : 32,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_15\/conv2dx" : {
+      "k" : 128,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_28\/conv2dx" : {
+      "k" : 32,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "depthwise_conv2d_12\/depthwise_conv2dx" : {
+      "k" : 128,
+      "w" : 6,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "add_13" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "conv2d_1\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "conv2d_20" : {
+      "k" : 1,
+      "w" : 1404,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 1
+    },
+    "conv2d_9\/conv2dx" : {
+      "k" : 128,
+      "w" : 12,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "add_5" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "conv2d_9" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "p_re_lu_11\/mul" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "conv2d_9\/conv2d" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "p_re_lu_17\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "conv2d_12\/conv2dx" : {
+      "k" : 128,
+      "w" : 6,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "conv2d_13\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "conv2d_2\/conv2dx" : {
+      "k" : 16,
+      "w" : 96,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "conv2d_17\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "max_pooling2d_4" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_10" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "add_6" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "depthwise_conv2d_4\/depthwise_conv2dx" : {
+      "k" : 32,
+      "w" : 48,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "conv2d_2\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "max_pool_4" : {
+      "k" : 128,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_8\/Maximum" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "p_re_lu_1\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "conv2d_3\/conv2d" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "p_re_lu_5\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "add_14" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "transpose_16" : {
+      "k" : 32,
+      "w" : 48,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "transpose_46" : {
+      "k" : 128,
+      "w" : 12,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "p_re_lu_9\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "depthwise_conv2d_17\/depthwise_conv2dx" : {
+      "k" : 32,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "add_7" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "conv2d_15" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "depthwise_conv2d_13\/depthwise_conv2dx" : {
+      "k" : 128,
+      "w" : 6,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "max_pooling2d_3" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "transpose_7" : {
+      "k" : 16,
+      "w" : 96,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "transpose_12" : {
+      "k" : 16,
+      "w" : 96,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "transpose_42" : {
+      "k" : 128,
+      "w" : 12,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "p_re_lu_5\/Maximum" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "conv2d_13\/conv2d" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "depthwise_conv2d_2\/depthwise_conv2dx" : {
+      "k" : 16,
+      "w" : 48,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "p_re_lu_19\/Maximum" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "transpose_3" : {
+      "k" : 16,
+      "w" : 96,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "p_re_lu_14\/mul" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "conv2d_4\/conv2dx" : {
+      "k" : 32,
+      "w" : 48,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "transpose_10" : {
+      "k" : 16,
+      "w" : 96,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "conv2d\/conv2dx" : {
+      "k" : 16,
+      "w" : 96,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "add" : {
+      "k" : 96,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "conv2d_2" : {
+      "k" : 96,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "conv2d_27\/conv2d" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_3\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "conv2d" : {
+      "k" : 96,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "add_8" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "p_re_lu_2\/Maximum" : {
+      "k" : 96,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "p_re_lu_26\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "p_re_lu_18\/Maximum" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "max_pooling2d_2" : {
+      "k" : 12,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "conv2d_7" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "add_15" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_18\/conv2d" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "max_pool_1" : {
+      "k" : 32,
+      "w" : 24,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "p_re_lu_14\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "add_9" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "depthwise_conv2d_9\/depthwise_conv2dx" : {
+      "k" : 128,
+      "w" : 12,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "conv2d_10\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "p_re_lu_27\/Maximum" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu\/Maximum" : {
+      "k" : 96,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "p_re_lu_17\/Maximum" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "channel_padding_2" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "p_re_lu_9\/mul" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "conv2d_4\/conv2d" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "transpose_29" : {
+      "k" : 64,
+      "w" : 24,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "transpose_59" : {
+      "k" : 128,
+      "w" : 6,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "transpose_89" : {
+      "k" : 128,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_4\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "max_pooling2d_1" : {
+      "k" : 24,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "transpose_87" : {
+      "k" : 32,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_16\/conv2dx" : {
+      "k" : 128,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_17\/mul" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_11\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "transpose_25" : {
+      "k" : 32,
+      "w" : 48,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "p_re_lu_7\/mul" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "p_re_lu_2\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "transpose_55" : {
+      "k" : 128,
+      "w" : 6,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "conv2d\/conv2d" : {
+      "k" : 96,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "transpose_23" : {
+      "k" : 32,
+      "w" : 48,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "transpose_83" : {
+      "k" : 128,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "add_16" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_27\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "p_re_lu_10\/mul" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "transpose_51" : {
+      "k" : 128,
+      "w" : 12,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "conv2d_14" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "conv2d_13\/conv2dx" : {
+      "k" : 128,
+      "w" : 6,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "conv2d_29" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_5\/mul" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "conv2d_15\/conv2d" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_19\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "p_re_lu_27\/mul" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_19\/conv2dx" : {
+      "k" : 32,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_5\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "depthwise_conv2d_22\/depthwise_conv2dx" : {
+      "k" : 128,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_29\/conv2d" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "conv2d_14\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "max_pooling2d" : {
+      "k" : 48,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "p_re_lu_3\/mul" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "conv2d_18\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "conv2d_10\/conv2d" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "conv2d_6\/conv2dx" : {
+      "k" : 64,
+      "w" : 24,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "conv2d_10\/conv2dx" : {
+      "k" : 128,
+      "w" : 12,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "add_22" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "depthwise_conv2d_14\/depthwise_conv2dx" : {
+      "k" : 128,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_19" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "conv2d_5" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "conv2d_29\/conv2dx" : {
+      "k" : 32,
+      "w" : 3,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_16\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "p_re_lu_26\/Maximum" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_1\/mul" : {
+      "k" : 96,
+      "w" : 16,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "conv2d_5\/conv2d" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "p_re_lu_16\/Maximum" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "depthwise_conv2d_7\/depthwise_conv2dx" : {
+      "k" : 64,
+      "w" : 24,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "p_re_lu_6\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 3,
+      "h" : 1
+    },
+    "add_17" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_6\/Maximum" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "conv2d_20\/conv2dx" : {
+      "k" : 1404,
+      "w" : 1,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 1
+    },
+    "transpose_38" : {
+      "k" : 64,
+      "w" : 24,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "conv2d_6\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "depthwise_conv2d\/depthwise_conv2dx" : {
+      "k" : 16,
+      "w" : 96,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "p_re_lu_13\/mul" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "transpose_36" : {
+      "k" : 64,
+      "w" : 24,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "p_re_lu_25\/Maximum" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "transpose_64" : {
+      "k" : 128,
+      "w" : 6,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "p_re_lu_15\/Maximum" : {
+      "k" : 3,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "max_pool_3" : {
+      "k" : 128,
+      "w" : 6,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "conv2d_8\/conv2dx" : {
+      "k" : 64,
+      "w" : 24,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "conv2d_30\/conv2dx" : {
+      "k" : 1,
+      "w" : 1,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 1
+    },
+    "conv2d_30\/conv2d" : {
+      "k" : 1,
+      "w" : 1,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 1
+    },
+    "p_re_lu_3\/Maximum" : {
+      "k" : 48,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 48
+    },
+    "transpose_62" : {
+      "k" : 128,
+      "w" : 6,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "add_23" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "depthwise_conv2d_5\/depthwise_conv2dx" : {
+      "k" : 32,
+      "w" : 24,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    },
+    "p_re_lu_9\/Maximum" : {
+      "k" : 12,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "conv2d_20\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 1404,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "conv2d_1\/conv2dx" : {
+      "k" : 16,
+      "w" : 96,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 96
+    },
+    "conv2d_13" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "conv2d_28" : {
+      "k" : 3,
+      "w" : 32,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 3
+    },
+    "p_re_lu_14\/Maximum" : {
+      "k" : 6,
+      "w" : 128,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 6
+    },
+    "depthwise_conv2d_10\/depthwise_conv2dx" : {
+      "k" : 128,
+      "w" : 12,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 12
+    },
+    "conv2d_7\/ReadVariableOp" : {
+      "k" : 1,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 1,
+      "h" : 1
+    },
+    "channel_padding_1" : {
+      "k" : 24,
+      "w" : 64,
+      "n" : 1,
+      "_rank" : 4,
+      "h" : 24
+    }
+  }
+}
