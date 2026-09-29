@@ -6,7 +6,7 @@ Lancer en release (le debug est ~15× plus lent) depuis un terminal qui a l'acc�
 `swift run -c release focus-gaze probe 10`
 - [ ] Face à la caméra : une ligne ~toutes les 0,5 s, `conf` ≥ 0,5, `yaw`/`pitch` proches de 0°.
 - [ ] Tourner la tête à gauche puis à droite : `yaw` change de signe, amplitude ≥ 15°.
-- [ ] `lag` reste < 150 ms pendant 10 s (pas de latence qui grimpe).
+- [ ] `lag` reste entre 0 et 150 ms pendant 10 s (négatif = mauvaise horloge).
 - [ ] Fin : ≥ 15 échantillons/s.
 - [ ] Main devant la caméra : les lignes s'arrêtent (pas de NaN affiché).
 

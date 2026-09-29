@@ -30,14 +30,18 @@ public final class GazeTracker: @unchecked Sendable {
         try await camera.start()
         let frames = camera.frames
         return AsyncStream(bufferingPolicy: .bufferingNewest(1)) { cont in
-            loop = Task { [self] in
+            let task = Task { [self] in
                 for await f in frames {
                     if Task.isCancelled { break }
                     if let s = process(pixelBuffer: f.pixelBuffer, time: f.timestampSeconds) { cont.yield(s) }
                 }
                 cont.finish()
             }
-            cont.onTermination = { [weak self] _ in self?.stop() }
+            loop = task
+            cont.onTermination = { [weak self] _ in
+                task.cancel()
+                self?.camera.stop()
+            }
         }
     }
 
@@ -47,8 +51,8 @@ public final class GazeTracker: @unchecked Sendable {
         camera.stop()
     }
 
-    /// One frame → sample, or nil without a usable face. Not thread-safe (the landmarker tracks across frames).
-    public func process(pixelBuffer pb: CVPixelBuffer, time: Double) -> GazeSample? {
+    /// One frame → sample, or nil without a usable face. Not thread-safe; never call while started.
+    func process(pixelBuffer pb: CVPixelBuffer, time: Double) -> GazeSample? {
         let w = CVPixelBufferGetWidth(pb), h = CVPixelBufferGetHeight(pb)
         guard let r = mesh.detect(pixelBuffer: pb), r.landmarks.count >= 468,
               let patch = HomographyEyePatchExtractor.extract(pixelBuffer: pb, landmarks: r.landmarks,

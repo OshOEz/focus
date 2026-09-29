@@ -1,4 +1,4 @@
-// Vendored from AACTools/MacGaze @3884a8c (MIT). Modified: removed dead `lastConfigurationError`; `frames` now uses `.bufferingNewest(1)`; timestamp uses the sample's presentation time directly; camera lookup falls back to `DiscoverySession`; the 30 fps lock only applies when the active format supports it.
+// Vendored from AACTools/MacGaze @3884a8c (MIT). Modified: removed dead `lastConfigurationError`; `frames` now uses `.bufferingNewest(1)`; timestamp uses the sample's presentation time directly; camera lookup falls back to `DiscoverySession`; the 30 fps lock only applies when the active format supports it; host-clock conversion.
 import Foundation
 import AVFoundation
 import CoreVideo
@@ -90,14 +90,17 @@ public final class CameraCapture: @unchecked Sendable {
     private lazy var sampleBufferDelegate = SampleBufferDelegate(
         onSample: { [weak continuationBox] frame in
             continuationBox?.yield(frame)
-        }
+        },
+        syncClock: { [weak self] in self?.session.synchronizationClock }
     )
 
     private final class SampleBufferDelegate: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         let onSample: (CameraFrame) -> Void
+        let syncClock: () -> CMClock?
 
-        init(onSample: @escaping (CameraFrame) -> Void) {
+        init(onSample: @escaping (CameraFrame) -> Void, syncClock: @escaping () -> CMClock?) {
             self.onSample = onSample
+            self.syncClock = syncClock
         }
 
         func captureOutput(
@@ -107,7 +110,16 @@ public final class CameraCapture: @unchecked Sendable {
         ) {
             guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
             let pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
-            onSample(CameraFrame(pixelBuffer: pixelBuffer, timestampSeconds: CMTimeGetSeconds(pts)))
+            // Frames are timestamped on the session's clock, which is only the
+            // host clock by coincidence. Convert explicitly so `timestampSeconds`
+            // is always comparable to `CACurrentMediaTime()`.
+            let hostPts: CMTime
+            if let sessionClock = syncClock() {
+                hostPts = CMSyncConvertTime(pts, from: sessionClock, to: CMClockGetHostTimeClock())
+            } else {
+                hostPts = pts
+            }
+            onSample(CameraFrame(pixelBuffer: pixelBuffer, timestampSeconds: CMTimeGetSeconds(hostPts)))
         }
     }
 
