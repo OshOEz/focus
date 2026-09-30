@@ -5,19 +5,27 @@ import Testing
     let s = FocusSettings()
     #expect(s.screenDwell == 0.3 && s.paneDwell == 0.3)
     #expect(s.typingPause == 3 && s.mousePause == 1.5)
-    #expect(s.hysteresis == 0.25)
+    #expect(s.headTurn == 0.5)
 }
 
-@Test func quietOnlyAfterTypingAndMousePauses() {
+@Test func screensWaitOneSecondAndPanesTheTypingPause() {
     let s = FocusSettings()
-    var input = InputActivity()
-    #expect(input.isQuiet(at: 0, s))
-    input.lastKey = 10
-    #expect(!input.isQuiet(at: 12.9, s))
-    #expect(input.isQuiet(at: 13, s))
+    var input = InputActivity(lastKey: 10)
+    #expect(!input.allowsScreenSwitch(at: 10.9, s))
+    #expect(input.allowsScreenSwitch(at: 11, s))
+    #expect(!input.allowsSameScreen(at: 12.9, s))
+    #expect(input.allowsSameScreen(at: 13, s))
     input.lastMouse = 13
-    #expect(!input.isQuiet(at: 14.4, s))
-    #expect(input.isQuiet(at: 14.5, s))
+    #expect(!input.allowsScreenSwitch(at: 14.4, s) && !input.allowsSameScreen(at: 14.4, s))
+    #expect(input.allowsScreenSwitch(at: 14.5, s) && input.allowsSameScreen(at: 14.5, s))
+}
+
+@Test func waitWhileTypingOffIgnoresKeysButNotTheMouse() {
+    var s = FocusSettings()
+    s.waitWhileTyping = false
+    let input = InputActivity(lastKey: 10, lastMouse: 10)
+    #expect(!input.allowsSameScreen(at: 11, s))
+    #expect(input.allowsSameScreen(at: 11.5, s) && input.allowsScreenSwitch(at: 11.5, s))
 }
 
 @Test func dwellFiresOnceAfterDuration() {

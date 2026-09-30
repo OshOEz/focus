@@ -39,3 +39,10 @@ private let s = FocusSettings()
     #expect(TargetResolver.pane(at: CGPoint(x: 520, y: 400), panes: panes, display: display, settings: s) == nil)
     #expect(TargetResolver.pane(at: CGPoint(x: 100, y: 400), panes: [panes[0]], display: display, settings: s) == nil)
 }
+
+@Test func restoresTheLastWindowUsedOnThatScreen() {
+    let elsewhere = WindowInfo(id: 9, frame: CGRect(x: 1200, y: 0, width: 500, height: 500))
+    #expect(TargetResolver.windowToRestore(on: display, windows: [right, left, elsewhere], last: 1) == 1)
+    #expect(TargetResolver.windowToRestore(on: display, windows: [right, left, elsewhere], last: 9) == 2)
+    #expect(TargetResolver.windowToRestore(on: display, windows: [tiny], last: nil) == nil)
+}

@@ -51,3 +51,12 @@ private func setup(_ name: String, _ displays: [DisplayFingerprint], ssid: Strin
     try store.delete(home.id)
     #expect(store.loadAll().isEmpty)
 }
+
+@Test func uniqueKeysSplitsDuplicateSerials() {
+    let a = DisplayFingerprint(vendor: 1, model: 2, serial: 42, width: 1920, height: 1080, originX: 0, originY: 0)
+    var b = a
+    b.originX = 1920
+    let keys = DisplayFingerprint.uniqueKeys([a, b, dell])
+    #expect(Set(keys).count == 3)
+    #expect(keys[2] == dell.key)            // unique displays keep their plain, stable key
+}

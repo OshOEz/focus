@@ -60,3 +60,14 @@ public enum SetupMatcher {
         return bySSID.count == 1 ? .matched(bySSID[0].id) : .ambiguous(candidates.map(\.id))
     }
 }
+
+extension DisplayFingerprint {
+    /// `key` of each display, made unique within the list: two identical monitors reporting the
+    /// same non-zero serial (cheap panels, some docks) get their origin appended, so they never
+    /// share a calibration or a "last window". Unique displays keep their plain key, which is the
+    /// one stable across rearrangements.
+    public static func uniqueKeys(_ displays: [DisplayFingerprint]) -> [String] {
+        let counts = Dictionary(displays.map { ($0.key, 1) }, uniquingKeysWith: +)
+        return displays.map { counts[$0.key]! > 1 ? "\($0.key)@\($0.originX),\($0.originY)" : $0.key }
+    }
+}

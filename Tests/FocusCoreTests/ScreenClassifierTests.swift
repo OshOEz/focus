@@ -3,8 +3,8 @@ import Testing
 
 private func pose(_ yaw: Double) -> PoseFeature { PoseFeature(yaw: yaw, pitch: 0, faceX: 0.5, faceY: 0.5) }
 
-private func classifier() -> ScreenClassifier {
-    ScreenClassifier(centroids: ["L": pose(-0.3), "R": pose(0.3)], hysteresis: 0.25, maxDistance: 0.35)
+private func classifier(headTurn: Double = 0.5) -> ScreenClassifier {
+    ScreenClassifier(centroids: ["L": pose(-0.3), "R": pose(0.3)], headTurn: headTurn, maxDistance: 0.35)
 }
 
 @Test func picksNearestScreen() {
@@ -13,7 +13,7 @@ private func classifier() -> ScreenClassifier {
     #expect(c.classify(pose(0.28)) == "R")
 }
 
-@Test func hysteresisKeepsCurrentNearTheMiddle() {
+@Test func boundaryKeepsCurrentNearTheMiddle() {
     var c = classifier()
     #expect(c.classify(pose(-0.3)) == "L")
     // Slightly right of the midpoint: R is nearer, but not by 25 %.
@@ -27,7 +27,7 @@ private func classifier() -> ScreenClassifier {
 }
 
 @Test func noCentroidsMeansNothing() {
-    var c = ScreenClassifier(centroids: [:], hysteresis: 0.25, maxDistance: 0.35)
+    var c = ScreenClassifier(centroids: [:], maxDistance: 0.35)
     #expect(c.classify(pose(0)) == nil)
 }
 
@@ -47,4 +47,72 @@ private func classifier() -> ScreenClassifier {
 @Test func poseMedianOfNothingUsableIsNil() {
     #expect(PoseFeature.median(of: []) == nil)
     #expect(PoseFeature.median(of: [PoseFeature(yaw: .infinity, pitch: 0, faceX: 0, faceY: 0)]) == nil)
+}
+
+@Test func higherHeadTurnNeedsABiggerTurn() {
+    var normal = classifier(headTurn: 0.5), strict = classifier(headTurn: 0.7)
+    _ = normal.classify(pose(-0.3)); _ = strict.classify(pose(-0.3))
+    #expect(normal.classify(pose(0.1)) == "R")   // 0.67 of the gap > 0.60
+    #expect(strict.classify(pose(0.1)) == "L")   // 0.67 < 0.70
+}
+
+@Test func lowHeadTurnNeverPingPongs() {
+    var c = classifier(headTurn: 0.3)            // threshold 0.5: the midpoint
+    _ = c.classify(pose(-0.3))
+    var flips = 0, last = "L"
+    for i in 0..<200 {
+        let yaw = (i % 2 == 0 ? 0.02 : -0.02) * Double(i % 7) / 6   // jitter around the bezel
+        let k = c.classify(pose(yaw))!
+        if k != last { flips += 1; last = k }
+    }
+    #expect(flips <= 1)
+}
+
+@Test func returnBandMakesGoingBackHarder() {
+    var c = classifier(headTurn: 0.5)
+    _ = c.classify(pose(-0.3))
+    #expect(c.classify(pose(0.1)) == "R")        // L → R at 0.67 of the gap
+    #expect(c.classify(pose(-0.05)) == "R")      // back toward L: 0.58 < 0.60 + 0.05
+    #expect(c.classify(pose(-0.1)) == "L")       // 0.67 > 0.65
+}
+
+@Test func cloudsMoveTheBoundaryToTheFacingEdges() {
+    let clouds = ["L": [pose(-0.4), pose(-0.3), pose(-0.2)], "R": [pose(0.2), pose(0.3), pose(0.4)]]
+    var withClouds = ScreenClassifier(centroids: ["L": pose(-0.3), "R": pose(0.3)], clouds: clouds, maxDistance: 0.35)
+    var centroidsOnly = classifier()
+    _ = withClouds.classify(pose(-0.3)); _ = centroidsOnly.classify(pose(-0.3))
+    // 0.05 rad: 0.625 of the gap between the facing dots (−0.2…0.2), 0.58 between centroids.
+    #expect(withClouds.classify(pose(0.05)) == "R")
+    #expect(centroidsOnly.classify(pose(0.05)) == "L")
+}
+
+@Test func threeScreensPicksTheNearestScreenPastItsBoundary() {
+    var c = ScreenClassifier(centroids: ["L": pose(-0.6), "M": pose(0), "R": pose(0.6)], maxDistance: 0.35)
+    _ = c.classify(pose(-0.6))
+    #expect(c.classify(pose(0.6)) == "R")        // past M's boundary too, but R is nearer
+}
+
+@Test func headTurnIsClampedToItsRange() {
+    #expect(classifier(headTurn: 0).threshold == 0.5)
+    #expect(abs(classifier(headTurn: 1).threshold - 0.7) < 1e-12)
+}
+
+// Issue #17: facing-edge dots 0.001 rad apart (calibration-dot noise, not a real gap) must not
+// turn a tiny denominator into a hair-trigger switch. Below the pose-jitter floor, gapFraction
+// falls back to centroid-to-centroid geometry, same as a display with no dots at all.
+@Test func tinyCloudGapFallsBackAndNeverPingPongs() {
+    let clouds = ["L": [pose(-0.3), pose(-0.0005)], "R": [pose(0.0005), pose(0.3)]]
+    for tenthsOfHeadTurn in stride(from: 3, through: 7, by: 1) {
+        let headTurn = Double(tenthsOfHeadTurn) / 10
+        var c = ScreenClassifier(centroids: ["L": pose(-0.3), "R": pose(0.3)], clouds: clouds,
+                                  headTurn: headTurn, maxDistance: 0.35)
+        _ = c.classify(pose(-0.3))
+        var flips = 0, last = "L"
+        for i in 0..<200 {
+            let yaw = -0.0005 + (i % 2 == 0 ? 0.005 : -0.005) * Double(i % 7) / 6   // jitter around L's edge dot
+            let k = c.classify(pose(yaw))!
+            if k != last { flips += 1; last = k }
+        }
+        #expect(flips <= 1, "headTurn \(headTurn): \(flips) flips")
+    }
 }

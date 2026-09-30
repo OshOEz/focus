@@ -33,6 +33,17 @@ public struct GazeSample: Sendable {
     }
 }
 
+extension GazeSample {
+    /// What GazeKit yields for a frame without a usable face, so consumers keep getting a
+    /// heartbeat ("Looking for your face") and any pending dwell is reset.
+    public static func noFace(at time: Double) -> GazeSample {
+        GazeSample(time: time, raw: CGPoint(x: Double.nan, y: .nan),
+                   pose: PoseFeature(yaw: .nan, pitch: .nan, faceX: .nan, faceY: .nan), confidence: 0)
+    }
+
+    public var hasFace: Bool { confidence > 0 && raw.x.isFinite && raw.y.isFinite && pose.isFinite }
+}
+
 extension PoseFeature {
     public var isFinite: Bool { yaw.isFinite && pitch.isFinite && faceX.isFinite && faceY.isFinite }
 

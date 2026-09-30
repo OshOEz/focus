@@ -88,7 +88,7 @@ func run() async {
             print("  ok : yaw \(deg(c.yaw)), pitch \(deg(c.pitch)) (\(poses.count) images)")
         }
 
-        var classifier = ScreenClassifier(centroids: centroids, hysteresis: 0.25, maxDistance: 0.35)
+        var classifier = ScreenClassifier(centroids: centroids, maxDistance: 0.35)
         print("Suivi en direct, Ctrl-C pour quitter.")
         var shown: String?? = .none
         while let s = await samples.next() {

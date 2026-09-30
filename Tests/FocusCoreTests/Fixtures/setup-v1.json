@@ -1,0 +1,6 @@
+{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","name":"Maison",
+ "fingerprint":{"displays":[{"vendor":1552,"model":41000,"serial":1,"width":1512,"height":982,"originX":0,"originY":0}],"cameraID":"cam"},
+ "calibrations":{"1552-41000-1":{"pose":{"yaw":-0.3,"pitch":0,"faceX":0.5,"faceY":0.5},
+   "calibrationPoints":[{"input":[0.1,0.1],"target":[0.1,0.1]},{"input":[0.9,0.1],"target":[0.9,0.1]},
+     {"input":[0.1,0.9],"target":[0.1,0.9]},{"input":[0.9,0.9],"target":[0.9,0.9]},{"input":[0.5,0.5],"target":[0.5,0.5]}],
+   "learnedPoints":[],"recentErrors":[]}}}

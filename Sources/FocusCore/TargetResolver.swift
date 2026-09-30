@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(CoreGraphics)
+import CoreGraphics
+#endif
 
 public enum TargetResolver {
     /// Topmost big-enough window under `p`; the current window wins while `p` stays within the stick margin.
@@ -20,5 +23,14 @@ public enum TargetResolver {
         let m = s.paneBoundaryMargin * display.width
         for (j, r) in panes.enumerated() where j != i && r.insetBy(dx: -m, dy: -m).contains(p) { return nil }
         return i
+    }
+
+    /// Window to focus when switching to a screen without a gazed window: the last one used there
+    /// if it is still on it, else the topmost big-enough window centred on it.
+    public static func windowToRestore(on display: CGRect, windows: [WindowInfo], last: UInt32?,
+                                       minSize: CGSize = CGSize(width: 200, height: 150)) -> UInt32? {
+        let here = windows.filter { display.contains(CGPoint(x: $0.frame.midX, y: $0.frame.midY)) }
+        if let last, here.contains(where: { $0.id == last }) { return last }
+        return here.first { $0.frame.width >= minSize.width && $0.frame.height >= minSize.height }?.id
     }
 }

@@ -78,6 +78,12 @@ private func samples(at p: CGPoint, yaw: Double, count: Int = 10) -> [GazeSample
     #expect(cal.map != nil)
 }
 
+@Test func builderStoresOnePosePerDot() throws {
+    let cal = try #require(CalibrationBuilder.build(
+        targets: targets.enumerated().map { ($1, samples(at: $1, yaw: Double($0) / 10)) }, minConfidence: 0.5))
+    #expect(cal.dotPoses.map(\.yaw) == [0, 0.1, 0.2, 0.3, 0.4])
+}
+
 @Test func buildIgnoresNonFinitePoseInMedian() throws {
     // Half of each target's confident, finite-raw samples have a NaN yaw. If `build` doesn't
     // also filter on pose finiteness, `median` mixes NaN into the pose computation and

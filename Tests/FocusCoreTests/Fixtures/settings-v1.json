@@ -1,0 +1,3 @@
+{"screenDwell":0.5,"paneDwell":0.3,"typingPause":4,"mousePause":1.5,"hysteresis":0.25,"offScreenDistance":0.35,
+ "minConfidence":0.5,"windowFocus":false,"paneFocus":true,"windowStickMargin":0.05,"paneBoundaryMargin":0.05,
+ "minWindowSize":[200,150]}
