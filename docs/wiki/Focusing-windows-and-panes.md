@@ -90,8 +90,9 @@ away by `CGAssociateMouseAndMouseCursorPosition(1)`. Without it, macOS freezes t
 
 `perform` returns `true` when the target app accepted the raise (AX `.success`). That does not prove
 focus landed. The next `World` snapshot shows whether it did, and that snapshot is also what releases
-the engine's latch. A `false` (unknown window or display, no Accessibility, refused raise, or a pane
-before plan 4) is "no effect". The latch stops the engine from re-issuing the same action every frame.
+the engine's latch. A `false` (unknown window or display, no Accessibility, refused raise, or an
+unverified/unsafe pane focus) is "no effect". The latch stops the engine from re-issuing the same
+action every frame.
 
 ### 9. Known limits
 
@@ -100,8 +101,68 @@ before plan 4) is "no effect". The latch stops the engine from re-issuing the sa
 - Some apps refuse the AX raise or ignore `kAXMainAttribute`. For those, `perform` returns `false`, or
   focus does not land and the next `World` shows it.
 
-## Panes (plan 4)
+## Split panes
 
-Not implemented yet. `FocusActuator.paneFocuser` is the hook that plan 4 installs: AX focus on the pane,
-then the synthetic-click fallback gated by `syntheticClickFallback`. Until then, `.pane` actions return
-`false`.
+Code: `Sources/FocusCore/PaneFinder.swift`, `PaneClick.swift`; `Sources/FocusMac/PaneProvider.swift`,
+`FocusActuator.swift` (the `.pane` branch); wiring in `Sources/FocusApp/AppController.swift`.
+
+### 1. Which apps
+
+Split-pane focus is allow-listed: 16 terminals and editors —
+iTerm2, Terminal, Ghostty, Warp, kitty, WezTerm, Hyper, VS Code, VS Code Insiders, Cursor, Windsurf,
+VSCodium, Zed, Sublime Text, Xcode, Android Studio — plus every `com.jetbrains.*` IDE, plus Xirp
+(`com.spotify.xirp`, a Focus addition; its panes were spiked to accept AX focus). The list lives in
+`PaneApps`. Everything else — browsers, chat apps, document editors — gets whole-window focus only:
+their "panes" are DOM regions or custom-drawn splits with no stable Accessibility container to find or
+
+### 2. How panes are found
+
+`PaneProvider` walks the window's AX tree with `PaneFinder`: a pane is the *deepest* focusable node
+whose visible rect is at least 200×150 pt, where visible means clipped to every ancestor's frame (a
+text view can be taller than its scroll area). If the window contains an `AXWebArea` (Electron/web
+apps), only panes inside it count — the surrounding native chrome is ignored. The walk prunes any
+subtree whose clipped rect already falls under 200×150 and stops after 3000 AX round trips, so one
+pathological tree costs a bounded amount, not a frozen focus loop.
+
+Results are cached per window: 2 s while panes were found, 1 s when the tree came back empty, because
+Electron/Chromium apps only build their AX tree after `AXManualAccessibility` is set (`PaneProvider`
+sets it once per pid) and it can take about a second to appear (spike: `docs/spikes/ax-panes.md`). A
+resize or move invalidates the cache for that window at once. Every AX call is bounded by the
+process-wide 0.25 s messaging timeout, so one hung app costs a quarter second, not a stall.
+
+To see what a new app's tree looks like, run `swift run ax-dump` against it before adding it to
+`PaneApps`.
+
+### 3. How a pane gets focus
+
+`FocusActuator` sets `kAXFocusedAttribute` on the pane's element, then verifies: it reads
+`AXFocusedUIElement` and walks up to 40 parents looking for that pane, because some terminals accept
+`AXFocused` without actually moving keyboard focus. If that fails, it falls back to a synthetic click
+at the pane centre, and only when **all** hold: AX focus failed verification, the "click to focus
+panes" setting (`syntheticClickFallback`) is on, the app is allow-listed, `CGPreflightPostEventAccess()`
+is already granted (never requested), and `PaneClick.point` finds a safe point — the centre is farther
+than `paneBoundaryMargin` from every other pane, the target window is topmost there among on-screen
+windows, and nothing above it (any window layer, read right before posting) covers that point. The
+click also moves the text cursor in editors, since it is a real click, not just a focus request.
+
+If "move pointer" is off, the pointer is warped back to where it was, but only after the click's own
+result is read — warping earlier could be undone by the click itself. Every synthetic event carries
+`InputMonitor.syntheticMarker` in `.eventSourceUserData`, so `InputMonitor` never treats our own click
+as user input (no mouse pause, nothing learned from it).
+
+### 4. Settings
+
+`FocusSettings.paneDwell` — pane delay, default 300 ms, range 200-1500 ms.
+`FocusSettings.syntheticClickFallback` — the click fallback toggle, default on (shared with the
+window-focus click setting, see reconciliation R2). Both reach `FocusActuator`/`FocusEngine` through
+`AppController.update(_:)`; the Settings-window rows are plan 3b Task 8.
+
+### 5. Known limits
+
+- No tmux (or similar terminal-multiplexer) panes: those are drawn by the terminal itself, not exposed
+  as Accessibility elements.
+- A divider dragged to create or resize a pane can take up to 2 s to show up (the cache TTL above).
+- The click fallback moves the text cursor in editors — there is no way to focus without doing that.
+- Verifying AX focus or a click can block the MainActor up to about 250 ms per pane switch (two
+  bounded polls); rare and user-paced, but see the `waitUntil` doc comment in `FocusActuator` if gaze
+  frames start dropping around pane switches.

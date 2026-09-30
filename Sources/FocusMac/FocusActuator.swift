@@ -10,6 +10,11 @@ import QuartzCore
     public var moveCursor = true
     /// Settings "click to focus panes" (`FocusSettings.syntheticClickFallback`); read by `focusPane`.
     public var syntheticClickFallback = true
+    /// True while a Focus window that can catch the click is on screen (calibration; later settings
+    /// and onboarding): a synthetic click would land on it instead of the target pane. Set by
+    /// `AppController`. The gaze overlay is exempt because it sets `ignoresMouseEvents` and passes
+    /// clicks through, so it never needs this.
+    public var suppressSyntheticClick = false
     /// Mirror of `FocusSettings.paneBoundaryMargin`, so `PaneClick` judges the click point with the
     /// same margin the engine used to pick the pane.
     public var paneBoundaryMargin = FocusSettings().paneBoundaryMargin
@@ -75,7 +80,8 @@ import QuartzCore
         let focused = { self.panes.focusedPaneIndex(of: window, panes: world.panes) == target }
         if AXUIElementSetAttributeValue(pane, kAXFocusedAttribute as CFString, kCFBooleanTrue) == .success,
            waitUntil(0.1, focused) { return true }
-        guard syntheticClickFallback, panes.allows(windows.bundleID(for: window)), CGPreflightPostEventAccess()
+        guard syntheticClickFallback, !suppressSyntheticClick, panes.allows(windows.bundleID(for: window)),
+              CGPreflightPostEventAccess()
         else { return false }
         var settings = FocusSettings()
         settings.paneBoundaryMargin = paneBoundaryMargin
