@@ -14,12 +14,12 @@ public enum PaneClick {
     ///
     /// (b) alone cannot see everything above the pane: `world.windows` is `WindowProvider`'s
     /// layer-0, non-Focus snapshot (docs/superpowers/plans/2026-09-30-plan-3a-engine-focusmac.md
-    /// ~l.2165), so a floating panel (NSPanel `.floating`, PiP, a visio mini-window, Focus's own
-    /// overlay) never appears there and would silently pass (b). `occluders` is the explicit,
-    /// layer-agnostic fix: the caller (`FocusActuator`, plan 4 task 6) reads
-    /// `CGWindowListCopyWindowInfo([.optionOnScreenOnly], ...)` with **no** layer filter right
-    /// before posting the click, and passes every on-screen window's frame except Focus's own and
-    /// `window` itself (issue #19).
+    /// ~l.2165), so a floating panel (NSPanel `.floating`, PiP, a visio mini-window) never appears
+    /// there and would silently pass (b). `occluders` is the explicit, layer-agnostic fix (issue #19,
+    /// reconciliation R11): right before posting, the caller (`FocusActuator`) reads the on-screen
+    /// windows **above** `window` with no layer filter (`.optionOnScreenAboveWindow`) and passes
+    /// their frames minus Focus's own and alpha-0 windows. Windows below `window` cannot take the
+    /// click; the default `[]` is for tests only.
     public static func point(for pane: CGRect, window: UInt32, world: World,
                              settings: FocusSettings = FocusSettings(), occluders: [CGRect] = []) -> CGPoint? {
         let c = CGPoint(x: pane.midX, y: pane.midY)
