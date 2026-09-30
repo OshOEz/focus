@@ -144,3 +144,45 @@ func seamStareWithRestNoiseNeverPingPongs(edge: Double) {
     }
     #expect(flips <= 1, "edges ±\(edge): \(flips) flips")
 }
+
+/// Laptop-below at a close head (bench `switch-latency/laptop-below@900pt`): A's centroid is the
+/// median of dot poses skewed toward its right and bottom edge dots (yaw −0.26), while its own
+/// centre is at yaw −0.62 and its outer dots at −0.78, so the centre sat 0.36 from the centroid —
+/// "off-screen" with the old 0.35. Off-screen is measured from the box the dots span instead.
+@Test func wideScreenIsOnScreenInsideItsDotsBox() {
+    let a = PoseFeature(yaw: -0.26, pitch: 0.31, faceX: 0.5, faceY: 0.5)
+    let dots = [-0.78, -0.62, -0.18, -0.05].flatMap { y in [-0.14, 0.31, 0.56].map { PoseFeature(yaw: y, pitch: $0, faceX: 0.5, faceY: 0.5) } }
+    var c = ScreenClassifier(centroids: ["A": a], clouds: ["A": dots], maxDistance: 0.2)
+    #expect(c.classify(PoseFeature(yaw: -0.62, pitch: 0.32, faceX: 0.5, faceY: 0.5)) == "A")   // 0.36 from the centroid
+    #expect(c.classify(PoseFeature(yaw: -0.85, pitch: 0.6, faceX: 0.5, faceY: 0.5)) == "A")    // outer corner, 0.08 past the box
+    #expect(c.classify(PoseFeature(yaw: -0.62, pitch: -0.5, faceX: 0.5, faceY: 0.5)) == nil)   // far below every dot
+}
+
+/// Off-screen is measured from the region the dots span (their bounding box), not from the nearest
+/// dot: between widely spaced dots is on-screen, and the margin only extends past the outer dots.
+@Test func offScreenMarginStartsAtTheDotsBoundingBox() {
+    let corners = [(-0.3, -0.3), (-0.3, 0.3), (0.3, -0.3), (0.3, 0.3)].map { PoseFeature(yaw: $0.0, pitch: $0.1, faceX: 0.5, faceY: 0.5) }
+    var c = ScreenClassifier(centroids: ["A": PoseFeature(yaw: 0, pitch: 0, faceX: 0.5, faceY: 0.5)], clouds: ["A": corners],
+                             maxDistance: 0.2)
+    #expect(c.classify(PoseFeature(yaw: 0, pitch: 0, faceX: 0.5, faceY: 0.5)) == "A")      // 0.42 from every dot
+    #expect(c.classify(PoseFeature(yaw: 0.45, pitch: 0, faceX: 0.5, faceY: 0.5)) == "A")   // 0.15 past the box
+    #expect(c.classify(PoseFeature(yaw: 0.55, pitch: 0, faceX: 0.5, faceY: 0.5)) == nil)   // 0.25 past the box
+}
+
+/// A calibration saved without dots keeps the centroid rule it was used with (0.35 from the centroid).
+@Test func dotlessCalibrationKeepsTheLegacyCentroidDistance() {
+    var c = ScreenClassifier(centroids: ["A": pose(0)], maxDistance: 0.2)
+    #expect(c.classify(pose(0.3)) == "A")
+    #expect(c.classify(pose(0.4)) == nil)
+}
+
+/// Leaning sideways or back moves the face in the image, not where the head points: the dots' face
+/// span is ~0 when the user sat still, so the off-screen box is on yaw and pitch only.
+@Test func leaningDoesNotReadAsLookingAway() {
+    let dots = [(-0.3, -0.3), (0.3, 0.3)].map { PoseFeature(yaw: $0.0, pitch: $0.1, faceX: 0.5, faceY: 0.4) }
+    var c = ScreenClassifier(centroids: ["A": PoseFeature(yaw: 0, pitch: 0, faceX: 0.5, faceY: 0.4)], clouds: ["A": dots],
+                             maxDistance: 0.2)
+    #expect(c.classify(PoseFeature(yaw: 0, pitch: 0, faceX: 0.75, faceY: 0.4)) == "A")
+    #expect(c.classify(PoseFeature(yaw: 0.2, pitch: -0.2, faceX: 0.25, faceY: 0.55)) == "A")
+    #expect(c.classify(PoseFeature(yaw: 0.6, pitch: 0, faceX: 0.5, faceY: 0.4)) == nil)
+}

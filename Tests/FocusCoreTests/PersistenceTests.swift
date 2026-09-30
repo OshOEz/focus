@@ -37,3 +37,10 @@ private func fixture(_ name: String) throws -> URL {
     #expect(SetupStore(directory: dir).loadAll().count == 1)
     #expect(try FileManager.default.contentsOfDirectory(atPath: dir.path).allSatisfy { !$0.hasSuffix(".broken") })
 }
+
+/// The off-screen margin changed meaning (from the centroid → past the dots' box), so a saved
+/// `offScreenDistance` (always 0.35: it was never a slider) must not override the new default.
+@Test func legacyOffScreenDistanceIsNotReadAsTheMargin() throws {
+    let s = try JSONDecoder().decode(FocusSettings.self, from: Data(contentsOf: fixture("settings-v1")))
+    #expect(s.offScreenMargin == 0.2 && FocusSettings().offScreenMargin == 0.2)
+}

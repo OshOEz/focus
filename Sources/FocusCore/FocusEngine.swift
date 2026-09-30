@@ -39,7 +39,7 @@ public struct ActionLatch: Sendable {
 public final class FocusEngine {
     /// Changes apply on the next sample (the Settings window edits this live).
     public var settings: FocusSettings {
-        didSet { classifier.headTurn = settings.headTurn; classifier.maxDistance = settings.offScreenDistance }
+        didSet { classifier.headTurn = settings.headTurn; classifier.maxDistance = settings.offScreenMargin }
     }
     /// On by default; `nil` feeds raw samples (unit tests that pin guard timing with ideal steps).
     public var smoother: GazeSmoother? = GazeSmoother()
@@ -57,7 +57,7 @@ public final class FocusEngine {
 
     public init(calibrations: [String: DisplayCalibration], settings: FocusSettings) {
         self.settings = settings
-        classifier = ScreenClassifier(centroids: [:], headTurn: settings.headTurn, maxDistance: settings.offScreenDistance)
+        classifier = ScreenClassifier(centroids: [:], headTurn: settings.headTurn, maxDistance: settings.offScreenMargin)
         load(calibrations)
     }
 
@@ -65,7 +65,7 @@ public final class FocusEngine {
     public func load(_ calibrations: [String: DisplayCalibration]) {
         self.calibrations = calibrations
         classifier = ScreenClassifier(centroids: calibrations.mapValues(\.pose), clouds: calibrations.mapValues(\.dotPoses),
-                                      headTurn: settings.headTurn, maxDistance: settings.offScreenDistance)
+                                      headTurn: settings.headTurn, maxDistance: settings.offScreenMargin)
         maps = calibrations.compactMapValues(\.map)
         dwell.reset()
         latch.reset()

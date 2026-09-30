@@ -17,7 +17,12 @@ public struct FocusSettings: Codable, Sendable, Equatable {
     public var typingPause = 3.0
     public var mousePause = 1.5
     public var headTurn = 0.5
-    public var offScreenDistance = 0.35
+    /// How far (head-pose radians) past the region a screen's calibration dots span a pose still
+    /// counts as that screen; beyond every screen it is "away". 0.2 from the sweep in
+    /// docs/wiki/Decision-engine.md §3: full screens on-screen from 0.1, a phone 20° (gaze) past the
+    /// edge away up to 0.225. Named `offScreenDistance` (0.35 from the centroid) before; old files'
+    /// value is ignored on purpose, it meant something else.
+    public var offScreenMargin = 0.2
     public var minConfidence = 0.5
     public var windowFocus = true
     public var paneFocus = true
@@ -41,7 +46,7 @@ extension FocusSettings {
         }
         read(.screenDwell, &screenDwell); read(.paneDwell, &paneDwell); read(.waitWhileTyping, &waitWhileTyping)
         read(.typingPause, &typingPause); read(.mousePause, &mousePause); read(.headTurn, &headTurn)
-        read(.offScreenDistance, &offScreenDistance); read(.minConfidence, &minConfidence)
+        read(.offScreenMargin, &offScreenMargin); read(.minConfidence, &minConfidence)
         read(.windowFocus, &windowFocus); read(.paneFocus, &paneFocus)
         read(.syntheticClickFallback, &syntheticClickFallback); read(.learnFromClicks, &learnFromClicks)
         read(.windowStickMargin, &windowStickMargin); read(.paneBoundaryMargin, &paneBoundaryMargin)

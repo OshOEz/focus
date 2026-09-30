@@ -65,6 +65,11 @@ first action that lands on the target screen.
 | `typing/off` | as above, `waitWhileTyping = false` | same | first ≤ 0.6 s |
 | `mouse` | side-by-side | L 1 s, then R 5 s with the mouse moving every frame | 0 actions |
 | `off-screen` | side-by-side | L 1 s, head down (pitch −0.7, a phone) 3 s, L 1 s | 0 actions, ≥ 90 % of off-screen frames `.lookingAway` |
+| `off-screen/<desk>-<where>@<d>pt` | laptop-below phone (20° below M) and lap (40°), side-by-side left/right (20° past the outer edge), stacked above (20° over T); 1800/1300/900 pt | nearest screen 1 s, away pose 3 s, back 1 s | 0 actions after the first look, ≥ 90 % `.lookingAway` |
+| `on-screen/<desk>` | side-by-side, stacked, laptop-below, single; 700/900/1300/1800/2400 pt | 11 × 11 points over each screen (1-99 %), 0.4 s each | no point `.lookingAway` |
+| `screen-choice/<desk>` | same | same points, each reached from its own screen's centre (0.4 s) | every point `.facing` its own screen; laptop-below ≤ 3 % wrong (known limit, Decision-engine.md §3) |
+| `on-screen-lean/<desk>` | same four desks; 900/1800 pt | centre and 5 % inside each edge, 0.4 s, then 0.6 s with the face shifted ±0.1/±0.2 (x) or ±0.1 (y) | never `.lookingAway` |
+| `switch-latency/laptop-below@<d>pt` | laptop-below at 900/700 pt | as `switch-latency` | as `switch-latency` |
 | `no-face` | side-by-side | L 1 s, R 0.2 s, no face 1 s, R 1 s | nothing without a face, first ≥ 300 ms after it returns |
 | `latch` | side-by-side, windows only on L | L 1 s, R 3 s | exactly one `.display(R)` |
 | `window-accuracy` | single, two half windows | 100 seeded fixations ≥ 10 % of the width from the split, 1 s each | accuracy ≥ 0.90 (live target 0.80, spec §1) |

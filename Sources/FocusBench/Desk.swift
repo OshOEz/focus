@@ -43,8 +43,11 @@ struct Desk {
     func display(at p: CGPoint) -> DisplayInfo? { displays.first { $0.frame.contains(p) } }
 
     /// One sample looking at `p` (global): noisy pose, raw gaze = local point + `bias` + noise.
-    func sample(at t: Double, lookingAt p: CGPoint, bias: CGPoint = .zero, rng: inout SplitMix64) -> GazeSample {
+    /// `lean`: face shift in the image (a sideways/back lean), added to faceX/faceY.
+    func sample(at t: Double, lookingAt p: CGPoint, bias: CGPoint = .zero, lean: CGVector = .zero,
+                rng: inout SplitMix64) -> GazeSample {
         var pose = pose(lookingAt: p)
+        pose.faceX += lean.dx; pose.faceY += lean.dy
         pose.yaw += rng.gaussian(poseNoise); pose.pitch += rng.gaussian(poseNoise)
         let d = display(at: p) ?? displays[0]
         let local = CGPoint(x: (p.x - d.frame.minX) / d.frame.width + bias.x + rng.gaussian(gazeNoise),
@@ -103,8 +106,8 @@ struct Sim {
         world = World(displays: desk.displays, windows: ws, focusedWindowID: ws.first?.id)
     }
 
-    mutating func look(at p: CGPoint, for seconds: Double, bias: CGPoint = .zero) {
-        feed(seconds) { sim in sim.desk.sample(at: sim.t, lookingAt: p, bias: bias, rng: &sim.rng) }
+    mutating func look(at p: CGPoint, for seconds: Double, bias: CGPoint = .zero, lean: CGVector = .zero) {
+        feed(seconds) { sim in sim.desk.sample(at: sim.t, lookingAt: p, bias: bias, lean: lean, rng: &sim.rng) }
     }
 
     /// Linear head/eye movement from `a` to `b`.
@@ -117,7 +120,11 @@ struct Sim {
     }
 
     mutating func pose(_ p: PoseFeature, for seconds: Double) {
-        feed(seconds) { GazeSample(time: $0.t, raw: CGPoint(x: 0.5, y: 0.5), pose: p, confidence: 0.9) }
+        feed(seconds) { sim in
+            var q = p
+            q.yaw += sim.rng.gaussian(sim.desk.poseNoise); q.pitch += sim.rng.gaussian(sim.desk.poseNoise)
+            return GazeSample(time: sim.t, raw: CGPoint(x: 0.5, y: 0.5), pose: q, confidence: 0.9)
+        }
     }
 
     mutating func noFace(for seconds: Double) { feed(seconds) { .noFace(at: $0.t) } }

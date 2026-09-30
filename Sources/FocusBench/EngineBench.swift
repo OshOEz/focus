@@ -11,6 +11,12 @@ enum EngineBench {
     /// The scenario table. Adding a scenario = one row; a row may return several results.
     static let scenarios: [(name: String, run: @MainActor () -> [BenchResult])] = [
         ("switch-latency", { desks.map { switchLatency($0.0, $0.1) } }),
+        // A close head makes each screen span more than 2 × offScreenMargin: its outer part must not read as "away".
+        ("switch-latency-close", { [900.0, 700].map { distance in
+            var d = Desk.laptopBelow
+            d.distance = distance
+            return switchLatency("laptop-below@\(Int(distance))pt", d)
+        } }),
         ("bezel", { desks.map { bezel($0.0, $0.1) } }),
         // Closer heads widen the facing-edge gap; 1000-1700 pt is where the old floor's cliff sat (issue #17).
         ("bezel-close", { [("side-by-side", Desk.sideBySide, 1300.0), ("side-by-side", .sideBySide, 1000),
@@ -24,6 +30,9 @@ enum EngineBench {
         ("typing", { [typingScreen(), typingPane(wait: true), typingPane(wait: false)] }),
         ("mouse", { [mouse()] }),
         ("off-screen", { [offScreen()] }),
+        ("off-screen-away", { awayRows() }),
+        ("on-screen", { (desks + [("single", Desk.single)]).flatMap { onScreen($0.0, $0.1) } }),
+        ("on-screen-lean", { (desks + [("single", Desk.single)]).map { onScreenLean($0.0, $0.1) } }),
         ("no-face", { [noFace()] }),
         ("latch", { [latch()] }),
         ("window-accuracy", { [windowAccuracy()] }),
@@ -171,6 +180,115 @@ enum EngineBench {
         return .check(group, "off-screen", sim.actions.isEmpty && share >= 0.9, rule: "0 actions, away_share ≥ 0.9",
                       metrics: ["actions": Double(sim.actions.count), "away_share": share],
                       reason: "\(sim.actions.count) actions, away_share \(share)")
+    }
+
+    /// Looking 20° (gaze) past the outer edge of the arrangement is "away": eye 45 cm above the desk,
+    /// laptop 60 cm away (its bottom edge 37° down), phone 30 cm away (56° down) → 19°. 40° ≈ the lap.
+    /// Head pose = headShare × gaze angle, capped at 85° gaze.
+    static func awayRows() -> [BenchResult] {
+        let deg = Double.pi / 180
+        var out: [BenchResult] = []
+        for distance in [1800.0, 1300, 900] {
+            func row(_ name: String, _ base: Desk, from key: String, yaw: (Double, Double, Double) -> Double,
+                     pitch: (Double, Double, Double) -> Double) {
+                var desk = base
+                desk.distance = distance
+                let u = desk.displays.map(\.frame).reduce(desk.displays[0].frame) { $0.union($1) }, h = desk.head
+                let edges = (left: atan2(u.minX - h.x, distance), right: atan2(u.maxX - h.x, distance),
+                             top: atan2(h.y - u.minY, distance), bottom: atan2(h.y - u.maxY, distance))
+                let cap = 85 * deg
+                let gazeYaw = min(max(yaw(edges.left, edges.right, 0), -cap), cap)
+                let gazePitch = min(max(pitch(edges.top, edges.bottom, 0), -cap), cap)
+                out.append(offScreen("\(name)@\(Int(distance))pt", desk, from: key,
+                                     PoseFeature(yaw: desk.headShare * gazeYaw, pitch: desk.headShare * gazePitch, faceX: 0.5, faceY: 0.4)))
+            }
+            row("laptop-below-phone", .laptopBelow, from: "M", yaw: { _, _, z in z }, pitch: { _, b, _ in b - 20 * deg })
+            row("laptop-below-lap", .laptopBelow, from: "M", yaw: { _, _, z in z }, pitch: { _, b, _ in b - 40 * deg })
+            row("side-by-side-left", .sideBySide, from: "L", yaw: { l, _, _ in l - 20 * deg }, pitch: { _, _, z in z })
+            row("side-by-side-right", .sideBySide, from: "R", yaw: { _, r, _ in r + 20 * deg }, pitch: { _, _, z in z })
+            row("stacked-above", .stacked, from: "T", yaw: { _, _, z in z }, pitch: { t, _, _ in t + 20 * deg })
+        }
+        return out
+    }
+
+    /// The whole of every screen, edges and corners included, at head distances 700-2400 pt: never
+    /// away (`on-screen/*`) and facing that very screen (`screen-choice/*`). Each point is reached
+    /// from its own screen's centre, so the bezel band keeps the screen you came from.
+    static func onScreen(_ name: String, _ desk: Desk) -> [BenchResult] {
+        var away: [String] = [], wrong: [String] = [], points = 0
+        for distance in [700.0, 900, 1300, 1800, 2400] {
+            var d = desk
+            d.distance = distance
+            var sim = Sim(d)
+            for display in d.displays {
+                for i in 0...10 { for j in 0...10 {
+                    let f = display.frame
+                    let p = CGPoint(x: f.minX + (0.01 + 0.098 * Double(i)) * f.width, y: f.minY + (0.01 + 0.098 * Double(j)) * f.height)
+                    sim.look(at: sim.centre(display.key), for: 0.4)
+                    sim.look(at: p, for: 0.4)
+                    points += 1
+                    let at = "\(display.key)(\(i),\(j))@\(Int(distance))"
+                    if sim.statuses.last == .lookingAway { away.append(at) }
+                    else if sim.statuses.last != .facing(display.key) { wrong.append("\(at)→\(sim.statuses.last.map { "\($0)" } ?? "-")") }
+                }}
+            }
+        }
+        return [.check(group, "on-screen/\(name)", away.isEmpty, rule: "no point of any screen away at 700-2400 pt",
+                       metrics: ["points": Double(points), "away": Double(away.count)],
+                       reason: "away at \(away.prefix(5).joined(separator: ", "))"),
+                // Known limit (Decision-engine.md §3): laptop-below's three-screen junction corners.
+                name == "laptop-below"
+                    ? .check(group, "screen-choice/\(name)", Double(wrong.count) <= 0.03 * Double(points),
+                             rule: "≤ 3 % of points on the wrong display at 700-2400 pt (known limit, see Decision-engine.md §3)",
+                             metrics: ["points": Double(points), "wrong": Double(wrong.count)],
+                             reason: "wrong at \(wrong.prefix(5).joined(separator: ", "))")
+                    : .check(group, "screen-choice/\(name)", wrong.isEmpty, rule: "every point faces its own screen at 700-2400 pt",
+                             metrics: ["points": Double(points), "wrong": Double(wrong.count)],
+                             reason: "wrong at \(wrong.prefix(5).joined(separator: ", "))")]
+    }
+
+    /// Leaning (face shifted in the image by ±0.1/±0.2 in x, ±0.1 in y) while looking at a screen's
+    /// centre or 5 % inside its edges never reads as away, at 900 and 1800 pt.
+    static func onScreenLean(_ name: String, _ desk: Desk) -> BenchResult {
+        let leans = [CGVector(dx: 0.1, dy: 0), CGVector(dx: -0.1, dy: 0), CGVector(dx: 0.2, dy: 0), CGVector(dx: -0.2, dy: 0),
+                     CGVector(dx: 0, dy: 0.1), CGVector(dx: 0, dy: -0.1)]
+        let spots: [(Double, Double)] = [(0.5, 0.5), (0.05, 0.5), (0.95, 0.5), (0.5, 0.05), (0.5, 0.95)]
+        var misses: [String] = [], cases = 0
+        for distance in [900.0, 1800] {
+            var d = desk
+            d.distance = distance
+            var sim = Sim(d)
+            for display in d.displays {
+                let f = display.frame
+                for (x, y) in spots { for lean in leans {
+                    let p = CGPoint(x: f.minX + x * f.width, y: f.minY + y * f.height)
+                    sim.look(at: p, for: 0.4)
+                    let from = sim.statuses.count
+                    sim.look(at: p, for: 0.6, lean: lean)
+                    cases += 1
+                    if sim.statuses[from...].contains(.lookingAway) {
+                        misses.append("\(display.key)(\(x),\(y)) lean(\(lean.dx),\(lean.dy))@\(Int(distance))")
+                    }
+                }}
+            }
+        }
+        return .check(group, "on-screen-lean/\(name)", misses.isEmpty, rule: "never away while leaning",
+                      metrics: ["cases": Double(cases), "away": Double(misses.count)],
+                      reason: "away at \(misses.prefix(5).joined(separator: ", "))")
+    }
+
+    /// `from`'s centre 1 s, the away pose 3 s, `from` 1 s.
+    static func offScreen(_ name: String, _ desk: Desk, from key: String, _ away: PoseFeature) -> BenchResult {
+        var sim = Sim(desk)
+        sim.look(at: sim.centre(key), for: 1)   // may switch to `from` first: only what follows counts
+        let from = sim.statuses.count, start = sim.t
+        sim.pose(away, for: 3)
+        let share = Double(sim.statuses[from...].filter { $0 == .lookingAway }.count) / Double(sim.statuses.count - from)
+        sim.look(at: sim.centre(key), for: 1)
+        let actions = sim.actions.filter { $0.time >= start }.count
+        return .check(group, "off-screen/\(name)", actions == 0 && share >= 0.9, rule: "0 actions, away_share ≥ 0.9",
+                      metrics: ["actions": Double(actions), "away_share": share],
+                      reason: "\(actions) actions, away_share \(share)")
     }
 
     /// Losing the face resets the dwell: the switch restarts its 300 ms once the face is back.

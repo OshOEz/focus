@@ -69,8 +69,59 @@ unchanged, so a `NaN` never enters a filter's running state.
 ## 3. Screen boundary
 
 `ScreenClassifier` (`Sources/FocusCore/ScreenClassifier.swift`) picks which display the head faces.
-Off-screen (phone, desk, ceiling) is a pose farther than `maxDistance` from every calibrated
-centroid — `nil`, no switch.
+Off-screen (phone, desk, ceiling) is a pose farther than `maxDistance`
+(`FocusSettings.offScreenMargin`, 0.2 rad of head pose) from the yaw × pitch box every screen's
+calibration dots span (`dotPoses`) — `nil`, no switch. Face position (faceX/faceY) is left out:
+off-screen is about where the head points, and the dots' face span is ~0 when the user sat still, so
+a 14 cm lean (0.2 of the image) would read as away on every screen. Face position still counts in
+nearest-centroid selection. A calibration saved without dots keeps its old
+rule: 0.35 from its centroid (`ScreenClassifier.legacyCentroidDistance`).
+
+Why not the centroid: a close or wide screen spans more than 2 × the margin (screen A of bench desk
+laptop-below spans yaw −0.78…−0.05 at 900 pt), and the centroid — the median of the calibration
+poses — leans toward the edge dots on the sides shared with neighbours (A: yaw −0.26 vs −0.62 at its
+centre). Measured from the centroid with 0.35, 40 % of A read as "away" at 1800 pt and 62 % at
+900 pt, so `switch-latency/laptop-below@900pt` missed every switch onto A or B. Why not the nearest
+dot: points between dots lie up to 0.32 rad from the nearest one at 700 pt, more than a phone. Why a
+box: the pose model is close to separable (yaw follows x, pitch follows y), so a screen's dots fill
+a box, and no on-screen point lies more than 0.10 from it (all bench desks, 700-2400 pt).
+
+"Away" is defined as 20° of gaze past the outer edge of the arrangement: eye 45 cm above the desk,
+the laptop 60 cm away (its bottom edge 37° down), a phone on the desk 30 cm away (56° down) → 19°.
+Head pose = 0.65 × gaze (`Desk.headShare`), so the phone sits ≈ 0.25 rad past the dots' box. Sweep
+over bench group 2 (default settings otherwise; on-screen rows = `on-screen/*`, `switch-latency/*`,
+`bezel/*`, `window-accuracy`; away rows = `off-screen*`):
+
+| margin | failing rows | note |
+|---|---|---|
+| 0.05 | 4 `on-screen/*`, `on-screen-lean/side-by-side` | too tight |
+| 0.075 | 3 `on-screen/*` (points at 700-900 pt) | too tight |
+| 0.10 – 0.20 | none | phone rows away_share 0.98 (0.15), 0.96 (0.20) |
+| 0.225 | none | phone rows away_share 0.93 vs rule 0.9: one frame from failing |
+| 0.25 | 11 away rows (away_share 0.29-0.87) | too loose |
+| 0.30 – 0.35 | 12 away rows (away_share 0) | too loose; 0.35 was the old centroid value |
+
+On-screen rows here: `on-screen/*` (11 × 11 points per screen, 700-2400 pt), `on-screen-lean/*`
+(face shifted ±0.1/±0.2 in x, ±0.1 in y at the centre and 5 % inside each edge, 900 and 1800 pt),
+`switch-latency/*`, `bezel/*`, `window-accuracy`. `screen-choice/laptop-below` fails at every
+margin, identically with the pre-fix classifier: see "Known limit" below.
+
+0.2 is the largest value that passes with a frame to spare. The remaining away frames are the
+smoother's transition, not noise.
+
+**Known limit (bench `screen-choice/laptop-below`, 39 of 1815 points, 2.1 %; row rule ≤ 3 %):** where
+three screens meet, the switch fraction is measured along the centroid-to-centroid axis, which is
+diagonal between A (or B) and M. The boundary it draws is tilted against the horizontal seam:
+- A's bottom-right corner (x ≥ 90-95 %, y ≥ 94-97 %) reads as M;
+- M's top-left corner (x ≤ 5-10 %, y ≤ 4-11 %) reads as A;
+- the same, mirrored, for B.
+
+This happens at every head distance from 700 to 2400 pt. It is unchanged by the off-screen margin
+and identical at 903b8d9. Three fixes on branch `fix/laptop-below-close` failed. A seam axis used only
+in front of the seam made switches flip straight back (228 of 84,136 probe poses). A seam axis used
+for every pose made A's whole bottom row read as M. A re-entry window left 5-23 stuck points. Their
+doubtful assumption: that one fixed pose axis per screen pair can draw a boundary. The likely fix is
+a 2-D rule, for example nearest-calibration-dot regions with hysteresis (issue pending).
 
 Switching between two on-screen displays is not "nearest centroid wins": the current screen keeps
 the pose until the next screen has *earned* it. For current screen C and a candidate N, the pose is
@@ -137,7 +188,7 @@ mouse event — never their content.
 | Panes/windows after typing | 3 s default | `FocusSettings.typingPause`, 1–10 s | (a) |
 | Wait while typing | on by default, can turn off | `FocusSettings.waitWhileTyping` | |
 | Mouse guard | 1.5 s fixed | `FocusSettings.mousePause` (no setting exposed) | |
-| Off-screen distance | 0.35 | `FocusSettings.offScreenDistance` | |
+| Off-screen margin | 0.2 past the dots' box | `FocusSettings.offScreenMargin` (no setting exposed) | ; sweep in §3 |
 
 `allowsScreenSwitch(at:_:)` only checks the mouse guard and (if `waitWhileTyping`) the fixed
 1-second screen-typing pause — turning to another screen still moves focus "after about a second"

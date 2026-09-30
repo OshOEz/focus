@@ -2,7 +2,8 @@ import Foundation
 
 /// Picks the screen the head faces.
 ///
-/// Off-screen: farther than `maxDistance` from every centroid → nil (phone, desk, ceiling).
+/// Off-screen: farther than `maxDistance` from the yaw × pitch box every screen's dots span, or than
+/// `legacyCentroidDistance` from the centroid of a calibration without dots → nil (phone, desk, ceiling).
 /// Switching: for the current screen C and a neighbour N, the pose is projected on the C→N
 /// axis and expressed as a fraction `s` of the gap between the facing edges of their
 /// calibration clouds (0 = C's nearest dot, 1 = N's nearest dot). N takes over once `s`
@@ -16,6 +17,8 @@ public struct ScreenClassifier: Sendable {
     /// flips twice on laptop-below, 2× twice at 900 pt, 2.5× never more than once; switch latency
     /// p50 stays 267 ms (laptop-below p95 267 → 333 ms, one frame, from the wider dead band).
     public static let minGap = 2.5 * CalibrationBuilder.minScreenSeparation
+    /// The off-screen distance calibrations saved without dots were used with (pre-plan-3 rule).
+    public static let legacyCentroidDistance = 0.35
     public var centroids: [String: PoseFeature]
     public var clouds: [String: [PoseFeature]]
     public var headTurn: Double
@@ -31,8 +34,18 @@ public struct ScreenClassifier: Sendable {
     public var threshold: Double { 0.5 + (min(max(headTurn, 0.3), 0.7) - 0.3) / 2 }
 
     public mutating func classify(_ pose: PoseFeature) -> String? {
+        // From the region the dots span, not the centroid: a close or wide screen spans more than
+        // 2 × the margin and its centroid (median of dot poses) leans toward its edge dots, so 40 %
+        // of screen A on bench desk laptop-below@1800pt (62 % at 900 pt) read as "away" measured
+        // from the centroid. Not from the nearest dot either: points between dots lie up to 0.32 rad
+        // from the nearest one at 700 pt, more than a phone 20° past the edge (0.25). From the box,
+        // no on-screen point is farther than 0.10 (sweep: docs/wiki/Decision-engine.md §3).
         guard let nearest = centroids.min(by: { $0.value.distance(to: pose) < $1.value.distance(to: pose) }),
-              nearest.value.distance(to: pose) <= maxDistance
+              centroids.contains(where: { key, c in
+                  let dots = clouds[key] ?? []
+                  return dots.isEmpty ? c.distance(to: pose) <= Self.legacyCentroidDistance
+                                      : Self.distance(pose, toBoxOf: dots) <= maxDistance
+              })
         else { current = nil; return nil }
         guard let cur = current, centroids[cur] != nil else { current = nearest.key; return nearest.key }
         var best: (key: String, d: Double)?
@@ -74,4 +87,13 @@ public struct ScreenClassifier: Sendable {
     }
 
     static func vector(_ p: PoseFeature) -> [Double] { [p.yaw, p.pitch, p.faceX, p.faceY] }
+
+    /// Distance from `p` to the yaw × pitch box of `dots` (0 inside). Yaw follows x and pitch y, so a
+    /// screen's cloud is close to a box. Face position is left out: off-screen is about where the head
+    /// points, and the dots' face span is ~0 when the user sat still, so a 14 cm lean (0.2 of the
+    /// image) would otherwise read as away on every screen.
+    static func distance(_ p: PoseFeature, toBoxOf dots: [PoseFeature]) -> Double {
+        func outside(_ v: Double, _ xs: [Double]) -> Double { max(xs.min()! - v, 0, v - xs.max()!) }
+        return hypot(outside(p.yaw, dots.map(\.yaw)), outside(p.pitch, dots.map(\.pitch)))
+    }
 }
