@@ -21,6 +21,15 @@ swift build -c release --product focus-bench
 `focus-bench <group> [--json FILE] [--fixtures DIR]` runs a group; `focus-bench report …` merges the JSON
 files, the unit-test log and the lint output into `report.md` (bench.sh passes the arguments).
 
+## CI
+
+`.github/workflows/ci.yml` runs on every pull request and on pushes to `dev`, `staging` and `prod`
+(macOS runner, newest Xcode): the no-prompt lint, `swift build`, `swift test`, the engine group and
+the app bundle. The vision group runs too but cannot fail the build: its timing targets assume Apple
+silicon with the Neural Engine, and hosted runners are virtual machines. The live AX group (4) and the
+app self-test need Accessibility and a real desktop, so they stay in `scripts/bench.sh` on a Mac.
+The `test` job is a required check on `dev`, `staging` and `prod`.
+
 ## The no-prompt rule
 
 The bench runs unattended (overnight, over SSH, in CI). It must never raise a TCC dialog: no camera,
