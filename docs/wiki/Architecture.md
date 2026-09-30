@@ -67,10 +67,13 @@ and from a 1 s timer (permission changes have no notification, so they are polle
   every click.
 - Calibrations are keyed by `DisplayFingerprint.uniqueKeys`, so two identical monitors never share one.
 
-### One setup (until plan 5)
+### Setups
 
-The app loads the first saved setup, or makes a "Default" one, and refreshes its fingerprint on each
-save. Plan 5 replaces this with fingerprint matching (`SetupMatcher`, Wi-Fi) and a Setups menu.
+`SetupResolver` (`Sources/FocusCore/SetupResolver.swift`) matches the live environment (screens, camera,
+Wi-Fi name) against saved setups and swaps the engine's calibration; `SetupController`
+(`Sources/FocusApp`) drives it from launch, display/camera changes and wake, and builds the Setup ▸ menu.
+Full rules and the menu shape are in [Setups](Setups.md); this replaces the single-"Default"-setup
+placeholder plan 3b shipped with.
 
 ### Launch modes
 

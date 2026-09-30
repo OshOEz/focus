@@ -111,6 +111,6 @@ less precisely when two places share the same screens and camera.
 - `Sources/FocusApp/SetupController.swift` — triggers, debouncing, notifications, the Setup ▸ menu, the
   calibration hand-off; `PlacesStep.swift` — the optional onboarding step.
 - Tests: `SetupResolverTests`, `SetupTests` (`Tests/FocusCoreTests`).
-- Benches: `setups-two-places`, `setups-fingerprint` are specified for plan 3a's Swift bench harness
-  (`Tools/focus-bench`), which lives on the still-unmerged `feat/benches` branch — not present in this
-  worktree yet; `scripts/bench-app.sh` group 5 covers the app-level smoke checks in the meantime.
+- Benches: `setups-two-places` (engine group: calibrations follow the place, learned clicks are kept) and
+  `setups-fingerprint` (live, read-only; skipped when Location isn't already granted), both in
+  `Sources/FocusBench` — see [Benches](Benches.md).
