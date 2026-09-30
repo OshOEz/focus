@@ -18,7 +18,9 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     }
 
     func update() {
-        let image = NSImage(systemSymbolName: app.status.symbol, accessibilityDescription: "Focus: \(app.status.title)")
+        // A notice nobody could be shown as a notification: badge the eye until it is dealt with.
+        let symbol = app.notifier.pending.isEmpty ? app.status.symbol : "eye.trianglebadge.exclamationmark"
+        let image = NSImage(systemSymbolName: symbol, accessibilityDescription: "Focus: \(app.status.title)")
         image?.isTemplate = true
         item.button?.image = image
         item.button?.toolTip = "Focus: \(app.status.title)"
@@ -29,6 +31,9 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         let status = NSMenuItem(title: app.status.title, action: nil, keyEquivalent: "")
         status.isEnabled = false
         menu.addItem(status)
+        for n in app.notifier.pending {
+            add(menu, "⚠︎ \(n.title(n.display.flatMap { app.names[$0] }))", enabled: app.canCalibrate) { [unowned self] in app.open(n) }
+        }
         menu.addItem(.separator())
 
         let hk = app.settings.hotKey
@@ -38,8 +43,8 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
         let recal = NSMenuItem(title: "Recalibrate", action: nil, keyEquivalent: "")
         let sub = NSMenu()
-        let canCalibrate = app.conditions.cameraGranted && app.calibration == nil
-        add(sub, "All Screens…", enabled: canCalibrate && !app.displays.isEmpty) { [unowned self] in app.startCalibration([]) }
+        let canCalibrate = app.canCalibrate
+        add(sub, "All Screens…", enabled: canCalibrate) { [unowned self] in app.startCalibration([]) }
         sub.addItem(.separator())
         for d in app.displays {
             let name = app.names[d.key] ?? "Display"
@@ -52,7 +57,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         }
         recal.submenu = sub
         menu.addItem(recal)
-        // T8 inserts "Settings…" (⌘,) and T7 "Setup Guide…" here, after a separator. Plan 5 adds "Setups" above Recalibrate.
+        // Plan 5 adds "Setups" above Recalibrate.
+        menu.addItem(.separator())
+        add(menu, "Settings…", key: ",") { [unowned self] in app.showSettings() }
+        add(menu, "Setup Guide…") { [unowned self] in app.showOnboarding() }
         menu.addItem(.separator())
         add(menu, "Quit Focus", key: "q") { NSApp.terminate(nil) }
     }

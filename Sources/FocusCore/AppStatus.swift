@@ -58,16 +58,16 @@ public enum AppStatus: Equatable, Sendable {
         switch self {
         case .paused: "Paused"
         case .screenLocked: "Paused while the Mac is locked or asleep"
-        case .needsCamera: "Camera access needed"
-        case .cameraUnavailable: "No camera available"
+        case .needsCamera: "Waiting for camera access"
+        case .cameraUnavailable: "Can't reach the camera"
         case .calibrating: "Calibrating…"
-        case .needsAccessibility: "Accessibility access needed"
-        case .needsCalibration: "Calibration needed"
-        case .oneDisplayWindowFocusOff: "One screen: turn on window focus in Settings"
-        case .lookingForFace: "Searching for your face…"
-        case .recalibrateSuggested(let d): "Recalibration suggested for \(d)"
-        case .tracking(let d?): "Tracking · looking at \(d)"
-        case .tracking(nil): "Tracking · looking away"
+        case .needsAccessibility: "Waiting for Accessibility access"
+        case .needsCalibration: "No screen calibrated yet"
+        case .oneDisplayWindowFocusOff: "One screen: switch on window and pane following in Settings"
+        case .lookingForFace: "Waiting to see your face…"
+        case .recalibrateSuggested(let d): "\(d) may need a new calibration"
+        case .tracking(let d?): "Active · on \(d)"
+        case .tracking(nil): "Active · looking away"
         }
     }
 

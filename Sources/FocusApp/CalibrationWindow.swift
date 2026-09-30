@@ -33,9 +33,9 @@ private final class CalibrationView: NSView {
         switch run.phase {
         case .ready(let i):
             drawText(title: "Screen \(i + 1) of \(run.screens.count) · \(c.name(for: i))",
-                     body: "Sit the way you usually work and face this screen with your head and eyes.",
-                     action: "Press Space, then follow the red dot until it stops.",
-                     footer: "Esc stops the calibration.")
+                     body: "Get into your normal working position, then face this screen with head and eyes.",
+                     action: "Press Space and keep your eyes on the red dot until it stops.",
+                     footer: "Esc cancels at any time.")
         case .dot(let i, let k, _):
             if let dot = run.dot(at: CACurrentMediaTime()) {
                 let p = CGPoint(x: dot.point.x * bounds.width, y: dot.point.y * bounds.height)
@@ -43,12 +43,12 @@ private final class CalibrationView: NSView {
             }
             drawCaption("\(c.name(for: i)) · dot \(k + 1) of \(run.screens[i].targets.count)")
         case .failed(_, .noFace):
-            drawText(title: "Focus couldn't find your face",
-                      body: "Check the lighting and that nothing covers the camera.",
+            drawText(title: "No face in view",
+                      body: "Make sure your face is lit and the camera is uncovered.",
                       action: "Press Space to redo this screen, or Esc to stop.", footer: nil)
         case .failed(_, .screensLookedSame):
-            drawText(title: "These screens look the same from the camera",
-                      body: "Turn your head toward each screen, not only your eyes.",
+            drawText(title: "The camera couldn't tell these screens apart",
+                      body: "Point your head at each screen; moving only your eyes isn't enough.",
                       action: "Press Space to start over, or Esc to stop.", footer: nil)
         case .finished, .cancelled:
             break   // the window is ordered out before this would ever be drawn
@@ -101,10 +101,12 @@ private final class CalibrationView: NSView {
     private let view: CalibrationView
     private var shownScreen: Int?
     /// The app frontmost right before our first `NSApp.activate()`, so we can hand keyboard focus back to
-    /// it once the window closes. Captured once, on that first activate; nil means there wasn't one (or it
-    /// was already Focus itself), so we hide instead.
+    /// it once the window closes. Captured once, on that first activate; nil means there wasn't one, so we
+    /// hide instead (unless Focus itself was frontmost, see `focusWasFrontmost`).
     private var previousApp: NSRunningApplication?
     private var capturedPreviousApp = false
+    /// Focus was already frontmost (started from the Setup Guide): keep it active so the guide stays up.
+    private var focusWasFrontmost = false
 
     init(run: CalibrationRun, frames: [String: CGRect], names: [String: String], onEnd: @escaping (CalibrationRun) -> Void) {
         self.run = run
@@ -167,7 +169,7 @@ private final class CalibrationView: NSView {
         if !capturedPreviousApp {
             capturedPreviousApp = true
             let front = NSWorkspace.shared.frontmostApplication
-            if front != .current { previousApp = front }
+            if front != .current { previousApp = front } else { focusWasFrontmost = true }
         }
         NSApp.activate()   // LSUIElement apps aren't active by default
     }
@@ -181,7 +183,7 @@ private final class CalibrationView: NSView {
         // Undo the activate above: Focus (LSUIElement) would otherwise stay the active app and steal
         // keyboard focus from whatever the user was in before calibrating. Skipped if we never actually
         // activated (e.g. an empty run that finished before showing a screen).
-        if capturedPreviousApp {
+        if capturedPreviousApp, !focusWasFrontmost {
             if let previousApp { previousApp.activate() } else { NSApp.hide(nil) }
         }
         onEnd(run)

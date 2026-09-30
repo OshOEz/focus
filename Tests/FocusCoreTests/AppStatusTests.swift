@@ -18,11 +18,11 @@ import Testing
     @Test func tracksWhenEverythingIsReady() {
         let c = ready()
         #expect(AppStatus(c) == .tracking(facing: "Studio Display"))
-        #expect(AppStatus(c).title == "Tracking · looking at Studio Display")
+        #expect(AppStatus(c).title == "Active · on Studio Display")
         #expect(c.wantsCamera && c.engineActive)
         var away = c
         away.facing = nil
-        #expect(AppStatus(away).title == "Tracking · looking away")
+        #expect(AppStatus(away).title == "Active · looking away")
     }
 
     @Test func userPauseWinsOverLock() {

@@ -5,6 +5,7 @@ import GazeKit
 import Observation
 import os
 import QuartzCore
+import ServiceManagement
 
 struct LaunchOptions {
     /// Bench mode: no onboarding, login item, hotkey or camera, so an unattended launch has no side effects.
@@ -54,6 +55,8 @@ final class AppController {
     private(set) var cameraPermission: Permissions.Status = .notDetermined
     private(set) var accessibilityPermission: Permissions.Status = .notDetermined
     private(set) var calibration: CalibrationWindowController?
+    /// Why the login item isn't what the toggle says (register error, or approval pending in System Settings).
+    private(set) var loginItemNote: String?
 
     @ObservationIgnored let options: LaunchOptions
     @ObservationIgnored let engine: FocusEngine
@@ -81,6 +84,21 @@ final class AppController {
     @ObservationIgnored private var learnedDirty = false
     @ObservationIgnored private var ticks = 0
     @ObservationIgnored private var timer: Timer?
+    @ObservationIgnored var onboardingWindow: NSWindow?
+    /// The app that had the keyboard when the guide opened; it gets it back when the guide closes.
+    @ObservationIgnored var appBeforeOnboarding: NSRunningApplication?
+    @ObservationIgnored private var onboardingOpen = false
+    @ObservationIgnored var settingsWindow: NSWindow?
+    /// The app that had the keyboard when Settings opened; it gets it back when Settings closes.
+    @ObservationIgnored var appBeforeSettings: NSRunningApplication?
+    @ObservationIgnored private var settingsOpen = false
+    @ObservationIgnored let notifier = Notifier()
+    @ObservationIgnored private lazy var gazeDot = GazeDot()
+    /// Drifted displays already warned about; a display leaves the set once it no longer drifts
+    /// (recalibrated), so a later drift warns again. In memory: after a relaunch one reminder is fine.
+    @ObservationIgnored private var driftNotified: Set<String> = []
+    /// Fingerprints at the previous display change, for NotificationPolicy.layoutChanged.
+    @ObservationIgnored private var lastFingerprints: [DisplayFingerprint] = []
 
     init(options: LaunchOptions) {
         self.options = options
@@ -107,6 +125,8 @@ final class AppController {
 
     func start() {
         statusItem = StatusItemController(app: self)
+        notifier.onOpen = { [weak self] n in self?.open(n) }
+        notifier.onChange = { [weak self] in self?.statusItem?.update() }
         displaysChanged()
         displayProvider.onChange = { [weak self] in self?.displaysChanged() }
         system.onChange = { [weak self] suspended in
@@ -125,6 +145,7 @@ final class AppController {
             MainActor.assumeIsolated { self?.tick() }
         }
         refreshPermissions()
+        if !settings.onboardingCompleted && !options.smoke { showOnboarding() }
     }
 
     // MARK: status
@@ -152,6 +173,7 @@ final class AppController {
         conditions.driftDisplay = driftKeys().sorted().first.flatMap { names[$0] }
         if !conditions.wantsCamera { conditions.cameraAvailable = true }   // judged afresh at the next start
         applyCamera()
+        noticeDrift()
         let new = AppStatus(conditions)
         if new != status { status = new; statusItem?.update() }
     }
@@ -240,6 +262,7 @@ final class AppController {
         lastFaceTime = -.infinity
         facingKey = nil
         gazePoint = nil
+        gazeDot.show(at: nil)
     }
 
     // MARK: samples
@@ -259,6 +282,7 @@ final class AppController {
             _ = actuator.perform(action, world: world)
         }
         gazePoint = engine.lastGazePoint
+        if settings.showGazeDot { gazeDot.show(at: gazePoint) }
         var facing: String?
         if case .facing(let key) = engine.status { facing = key }
         if facing != facingKey { facingKey = facing; updateStatus() }
@@ -303,6 +327,21 @@ final class AppController {
         updateStatus()   // resuming restarts the camera, which resets the engine's latch (startCamera)
     }
 
+    func onboardingVisible(_ open: Bool) {
+        onboardingOpen = open
+        syncClickSuppression()
+    }
+
+    func settingsVisible(_ open: Bool) {
+        settingsOpen = open
+        syncClickSuppression()
+    }
+
+    /// Our own windows (calibration, setup guide, settings) can catch the click fallback's synthetic click themselves.
+    private func syncClickSuppression() {
+        actuator.suppressSyntheticClick = calibration != nil || onboardingOpen || settingsOpen
+    }
+
     /// The single write path for settings: apply to the live components, persist, re-derive status.
     func update(_ change: (inout AppSettings) -> Void) {
         let old = settings
@@ -313,7 +352,13 @@ final class AppController {
         actuator.syntheticClickFallback = settings.engine.syntheticClickFallback
         actuator.paneBoundaryMargin = settings.engine.paneBoundaryMargin
         if settings.cameraID != old.cameraID { stopCamera() }   // the next start opens the new device
+        if settings.launchAtLogin != old.launchAtLogin { applyLoginItem(settings.launchAtLogin) }
+        if !settings.showGazeDot { gazeDot.show(at: nil) }
         updateStatus()
+        // Before this, every screen was uncalibrated on purpose (noticesEnabled was false): announce
+        // whichever ones are still unmapped now that the guide is done, instead of waiting for the next
+        // physical display change to say so.
+        if settings.onboardingCompleted, !old.onboardingCompleted { noticeDisplays(old: lastFingerprints) }
         guard !options.smoke else { return }   // bench mode writes nothing
         do { try settingsStore.save(settings) } catch {
             // ponytail: logged only, AppStatus has no "can't save" slot; the next change retries the write.
@@ -328,8 +373,28 @@ final class AppController {
         }
     }
 
+    /// Registers the new shortcut; if another app holds it, the old one is put back and nothing is saved.
+    func setHotKey(_ spec: HotKeySpec) -> Bool {
+        guard spec.isValid else { return false }
+        registerHotKey(spec)
+        guard hotKey != nil else { registerHotKey(settings.hotKey); return false }
+        update { $0.hotKey = spec }
+        return true
+    }
+
+    /// While the recorder listens: a registered Carbon hotkey would swallow its own combo before the recorder sees it.
+    func suspendHotKey() { hotKey = nil }
+
+    func resumeHotKey() {
+        guard !options.smoke else { return }
+        registerHotKey(settings.hotKey)
+    }
+
+    /// A paused Focus sends no samples (wantsCamera is false), so a calibration started then could never finish.
+    var canCalibrate: Bool { calibration == nil && conditions.cameraGranted && !conditions.userPaused && !displays.isEmpty }
+
     func startCalibration(_ keys: [String]) {
-        guard calibration == nil, conditions.cameraGranted, !displays.isEmpty else { return }
+        guard canCalibrate else { return }
         let keys = keys.isEmpty ? displays.map(\.key) : keys.filter { k in displays.contains { $0.key == k } }
         let targets = CalibrationLayout.targets(for: displays)
         let screens = keys.map { CalibrationRun.Screen(key: $0, targets: targets[$0] ?? []) }
@@ -339,14 +404,16 @@ final class AppController {
             run: CalibrationRun(screens: screens, others: others, minConfidence: settings.engine.minConfidence),
             frames: Dictionary(uniqueKeysWithValues: displays.map { ($0.key, $0.frame) }), names: names
         ) { [weak self] run in self?.calibrationEnded(run) }
-        actuator.suppressSyntheticClick = true   // the calibration window can catch the click itself
+        gazeDot.show(at: nil)   // samples go to the calibration now, so the dot would freeze in place
+        syncClickSuppression()
         updateStatus()   // .calibrating → wantsCamera
     }
 
     /// Only a finished run changes anything. New calibrations replace old ones (and their learned clicks) per screen.
     private func calibrationEnded(_ run: CalibrationRun) {
         calibration = nil
-        actuator.suppressSyntheticClick = false
+        syncClickSuppression()
+        if onboardingOpen { onboardingWindow?.makeKeyAndOrderFront(nil) }   // back to the guide's calibrate step
         var all = engine.calibrations
         for (k, c) in run.results where run.phase == .finished { all[k] = c }
         // Also on cancel: resets the latch, so an action latched before the calibration can't swallow the first switch.
@@ -374,16 +441,93 @@ final class AppController {
     }
 
     private func displaysChanged() {
+        let oldFingerprints = lastFingerprints
+        lastFingerprints = displayProvider.fingerprints
         displays = displayProvider.displays
         let raw = displays.map { displayProvider.name(for: $0.key) }
         names = Dictionary(uniqueKeysWithValues: zip(displays.map(\.key), DisplayNaming.unique(raw)))
         // Screens changed under a running calibration: its targets and windows are stale. Cancel it; nothing is saved.
         calibration?.cancel()
         updateStatus()
+        noticeDisplays(old: oldFingerprints)
         statusItem?.update()
     }
 
+    // MARK: notices
+
+    /// Before the guide is done every screen is uncalibrated on purpose, so there is nothing to announce yet.
+    private var noticesEnabled: Bool { settings.onboardingCompleted && !options.smoke }
+
+    private func noticeDisplays(old: [DisplayFingerprint]) {
+        guard noticesEnabled else { return }
+        let fresh = NotificationPolicy.newDisplays(present: displays.map(\.key), calibrated: calibratedKeys,
+                                                   notified: settings.notifiedDisplays)
+        for k in fresh { notifier.post(.newDisplay(k), name: names[k]) }
+        if !fresh.isEmpty { update { $0.notifiedDisplays.formUnion(fresh) } }
+        if !calibratedKeys.isEmpty, NotificationPolicy.layoutChanged(from: old, to: lastFingerprints) {
+            notifier.post(.layoutChanged, name: nil)
+        }
+    }
+
+    /// Sweeps every notice that no longer applies (unplugged, calibrated since, or no longer drifting) and
+    /// posts fresh drift notices. Runs from updateStatus(), so a calibration done via Recalibrate ▸ All
+    /// Screens or the guide clears its notice immediately, not just on the next physical display change.
+    private func noticeDrift() {
+        let drifting = driftKeys()
+        driftNotified.formIntersection(drifting)
+        let present = Set(displays.map(\.key))
+        for n in notifier.pending {
+            switch n {
+            case .drift(let k): if !drifting.contains(k) { notifier.take(n) }
+            case .newDisplay(let k): if !present.contains(k) || calibratedKeys.contains(k) { notifier.take(n) }
+            case .layoutChanged: break
+            }
+        }
+        guard noticesEnabled else { return }
+        let cals = engine.calibrations.filter { drifting.contains($0.key) }
+        for k in NotificationPolicy.drifted(cals, notified: driftNotified) {
+            driftNotified.insert(k)
+            notifier.post(.drift(k), name: names[k])
+        }
+    }
+
+    /// A clicked notification or menu notice: the fix is always a calibration.
+    func open(_ n: FocusNotice) {
+        guard canCalibrate else { return }   // e.g. paused: keep the notice until it can be acted on
+        notifier.take(n)
+        switch n {
+        case .drift(let k), .newDisplay(let k): startCalibration([k])
+        case .layoutChanged: startCalibration([])
+        }
+    }
+
+    /// Only the Setup Guide's final button calls this: never at launch, never in bench mode.
+    func requestNotificationPermission() {
+        guard !options.smoke else { return }
+        Task { await notifier.requestAuthorization() }
+    }
+
+    /// SMAppService needs a real bundle (not `swift run`), and benches must never touch the login items.
+    private var canManageLoginItem: Bool { Bundle.main.bundleIdentifier != nil && !options.smoke }
+
+    /// "On" by default, registered once: after that only the user's toggle registers or unregisters, so
+    /// switching Focus off in System Settings → Login Items is never undone behind their back.
     private func applyLoginItemDefault() {
-        // T8 fills this in (SMAppService). Until then it only records nothing.
+        guard canManageLoginItem, settings.launchAtLogin, !settings.loginItemDefaultApplied else { return }
+        try? SMAppService.mainApp.register()
+        if SMAppService.mainApp.status == .requiresApproval { loginItemNote = Self.approveLoginItem }
+        update { $0.loginItemDefaultApplied = true }
+    }
+
+    private static let approveLoginItem = "Approve Focus in System Settings → General → Login Items."
+
+    private func applyLoginItem(_ on: Bool) {
+        guard canManageLoginItem else { return }
+        do {
+            if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+            loginItemNote = SMAppService.mainApp.status == .requiresApproval ? Self.approveLoginItem : nil
+        } catch {
+            loginItemNote = error.localizedDescription
+        }
     }
 }

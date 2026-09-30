@@ -23,15 +23,15 @@ its fields from the components and turns it into an `AppStatus` (first match win
 |------------------------------------|---------------------------|--------|
 | user paused                        | Paused                    | off    |
 | locked / asleep / screensaver      | Paused while locked       | off    |
-| no camera permission               | Camera access needed      | off    |
-| camera failed or its stream ended  | No camera available       | retry  |
+| no camera permission               | Waiting for camera access | off    |
+| camera failed or its stream ended  | Can't reach the camera    | retry  |
 | calibrating                        | Calibrating…              | on     |
-| no Accessibility                   | Accessibility access needed | off  |
-| no connected display calibrated    | Calibration needed        | off    |
+| no Accessibility                   | Waiting for Accessibility access | off |
+| no connected display calibrated    | No screen calibrated yet  | off    |
 | one display, window focus off      | One screen: …             | off    |
-| no face for 1 s                    | Searching for your face…  | on     |
-| click errors drifted on a display  | Recalibration suggested   | on     |
-| otherwise                          | Tracking · looking at …   | on     |
+| no face for 1 s                    | Waiting to see your face… | on     |
+| click errors drifted on a display  | … may need a new calibration | on     |
+| otherwise                          | Active · on …             | on     |
 
 The camera runs only while `AppConditions.wantsCamera` is true, so the camera LED is off whenever its
 frames would be thrown away. That is the privacy promise the user can check with their own eyes.
