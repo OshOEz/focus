@@ -91,7 +91,8 @@ import Testing
         #expect(!OnboardingStep.permissions.canContinue(permissionsGranted: false))
         #expect(OnboardingStep.permissions.canContinue(permissionsGranted: true))
         #expect(OnboardingStep.calibrate.canContinue(permissionsGranted: false))
-        #expect(OnboardingStep.allCases.count == 6)
+        #expect(OnboardingStep.places.canContinue(permissionsGranted: false))   // optional: never blocks
+        #expect(OnboardingStep.allCases.count == 7)
         #expect(OnboardingStep.done.next == nil && OnboardingStep.welcome.previous == nil)
     }
 

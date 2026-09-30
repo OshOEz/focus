@@ -22,7 +22,7 @@ from the menu bar ("Setup Guide…") at any time.
 | Camera | yes | Head pose and gaze estimation, frame by frame, in memory | "Allow Camera" → `AVCaptureDevice.requestAccess`; if denied, "Open Privacy Settings" |
 | Accessibility | yes | Raising and focusing the window or pane you look at, moving the pointer, reading window and pane frames (AX) | "Allow Accessibility" → `AXIsProcessTrustedWithOptions(prompt)` + opens Privacy & Security → Accessibility |
 | Notifications | no | "Recalibration suggested" and new-screen notices (plan 3b T9) | the guide's last button, once |
-| Location | no | Reading the Wi-Fi name so a Setup can match a place (plan 5 only) | a future optional "Places" step |
+| Location | no | Reading the Wi-Fi name so a Setup can match a place (plan 5 only) | the optional "Places" step of the setup guide (`PlacesStep`), only on its button |
 
 Accessibility has no "not determined" state: an untrusted app reads as denied, so the guide always
 shows the button until the grant lands. Global mouse monitors installed before the grant receive

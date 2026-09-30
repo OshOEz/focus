@@ -32,7 +32,11 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         status.isEnabled = false
         menu.addItem(status)
         for n in app.notifier.pending {
-            add(menu, "⚠︎ \(n.title(n.display.flatMap { app.names[$0] }))", enabled: app.canCalibrate) { [unowned self] in app.open(n) }
+            // Only the notices `open(_:)` answers with a calibration need one to be possible right now;
+            // `.setupSwitched` is informational (clicking it just dismisses it) and stays enabled.
+            let needsCalibration = if case .setupSwitched = n { false } else { true }
+            add(menu, "⚠︎ \(n.title(n.display.flatMap { app.names[$0] }))",
+                enabled: !needsCalibration || app.canCalibrate) { [unowned self] in app.open(n) }
         }
         menu.addItem(.separator())
 
@@ -57,7 +61,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         }
         recal.submenu = sub
         menu.addItem(recal)
-        // Plan 5 adds "Setups" above Recalibrate.
+        menu.addItem(app.setups.menuItem())
         menu.addItem(.separator())
         add(menu, "Settings…", key: ",") { [unowned self] in app.showSettings() }
         add(menu, "Setup Guide…") { [unowned self] in app.showOnboarding() }

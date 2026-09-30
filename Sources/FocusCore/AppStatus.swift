@@ -82,10 +82,13 @@ public enum AppStatus: Equatable, Sendable {
 }
 
 public enum OnboardingStep: Int, CaseIterable, Sendable {
-    case welcome, permissions, calibrate, adjust, tryIt, done
+    // `places` (plan 5): reading the Wi-Fi name only helps once a setup exists, and the first one is
+    // created by `calibrate` — so it sits right before, after Location has a chance to be granted.
+    case welcome, permissions, places, calibrate, adjust, tryIt, done
 
     /// Only the permissions page blocks: nothing after it works without Camera and Accessibility.
-    /// Calibration can be skipped and done later from the menu bar.
+    /// Calibration and Places can both be skipped and done later (calibration from the menu bar,
+    /// Location from System Settings, prompted again by the guide).
     public func canContinue(permissionsGranted: Bool) -> Bool { self != .permissions || permissionsGranted }
     public var next: OnboardingStep? { OnboardingStep(rawValue: rawValue + 1) }
     public var previous: OnboardingStep? { OnboardingStep(rawValue: rawValue - 1) }

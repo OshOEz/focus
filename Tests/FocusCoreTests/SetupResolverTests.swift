@@ -70,6 +70,22 @@ private let unknown = place([builtIn], camera: "usb-cam")
         #expect(r.current == unknown)
     }
 
+    /// #32: a calibration reached with no active setup (skipped guide, an unmatched place, or the active
+    /// setup just deleted) must not lose its results. `AppController.startCalibration` now delegates that
+    /// case to `SetupController.calibrateThisPlace`, which is exactly `createSetup` + `storeCalibrations` —
+    /// this proves that pair creates a setup, activates it, and actually keeps what's stored in it.
+    @Test func calibratingWithNoActiveSetupCreatesOne() throws {
+        let (r, e, store) = make([])
+        defer { try? FileManager.default.removeItem(at: store.directory) }
+        #expect(r.resolve(unknown) == nil)   // first run: read the place, nothing to match yet
+        #expect(r.activeID == nil)
+        let s = try #require(try r.createSetup(named: "Home"))
+        #expect(r.activeID == s.id)
+        try r.storeCalibrations([builtIn.key: cal(yaw: 0)], into: s.id)
+        #expect(e.calibrations[builtIn.key] != nil)
+        #expect(store.loadAll().first { $0.id == s.id }?.calibrations[builtIn.key] != nil)
+    }
+
     @Test func emptyReadingsAreIgnored() {
         let (r, _, store) = make([home])
         defer { try? FileManager.default.removeItem(at: store.directory) }

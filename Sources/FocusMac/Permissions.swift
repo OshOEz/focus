@@ -47,4 +47,15 @@ public enum Permissions {
     public static func openSettings(_ pane: Pane) {
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?\(pane.rawValue)")!)
     }
+
+    /// Kept alive until the user answers the prompt, or macOS drops it; onboarding's Places step polls
+    /// `location` once a second instead of using a delegate.
+    @MainActor private static var locationManager: CLLocationManager?
+
+    /// Onboarding's Places step only.
+    @MainActor public static func requestLocation() {
+        let manager = CLLocationManager()
+        locationManager = manager
+        manager.requestWhenInUseAuthorization()
+    }
 }

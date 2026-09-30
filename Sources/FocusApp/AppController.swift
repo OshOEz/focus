@@ -67,8 +67,12 @@ final class AppController {
     @ObservationIgnored let input = InputMonitor()
     @ObservationIgnored let system = SystemStateMonitor()
     @ObservationIgnored private let settingsStore = SettingsStore(url: AppPaths.settings)
-    @ObservationIgnored private let setupStore = SetupStore(directory: AppPaths.setups)
-    @ObservationIgnored private var setup: Setup
+    /// Owns every setup file and picks which one the engine uses (spec §7); the only thing that touches
+    /// `engine.load`/`SetupStore.save` besides this file's own resolver construction in `start()`.
+    /// Built in `start()`, not `init`: their closures capture `self`, which two-phase init disallows
+    /// while any other stored property (declared below this one) is still unassigned.
+    @ObservationIgnored var resolver: SetupResolver!
+    @ObservationIgnored var setups: SetupController!
     @ObservationIgnored private var statusItem: StatusItemController?
     @ObservationIgnored private var hotKey: HotKey?
     @ObservationIgnored private var tracker: GazeTracker?
@@ -82,6 +86,9 @@ final class AppController {
     @ObservationIgnored private var lastFaceTime = -Double.infinity
     @ObservationIgnored private var lastFocusedWindow: UInt32?
     @ObservationIgnored private var learnedDirty = false
+    /// Set only when `startCalibration` was reached through `SetupController.calibrate`; forwarded the
+    /// finished (or, on cancel, empty) result instead of `calibrationEnded` storing it itself.
+    @ObservationIgnored private var calibrationCompletion: (([String: DisplayCalibration]) -> Void)?
     @ObservationIgnored private var ticks = 0
     @ObservationIgnored private var timer: Timer?
     @ObservationIgnored var onboardingWindow: NSWindow?
@@ -106,13 +113,10 @@ final class AppController {
         self.settings = settings
         let dp = DisplayProvider()
         displayProvider = dp
-        // ponytail: one setup, re-fingerprinted on each save. Plan 5 replaces this with SetupMatcher + EnvironmentFingerprinter.
-        let setup = SetupStore(directory: AppPaths.setups).loadAll().first
-            ?? Setup(id: UUID(), name: "Default",
-                     fingerprint: Fingerprint(displays: dp.fingerprints, cameraID: settings.cameraID ?? "default", wifiSSID: nil),
-                     calibrations: [:])
-        self.setup = setup
-        engine = FocusEngine(calibrations: setup.calibrations, settings: settings.engine)
+        // Starts empty: SetupController.start()'s first resolveNow() loads whichever setup matches (or
+        // none, until the place is calibrated) — this file no longer picks a calibration itself.
+        let engine = FocusEngine(calibrations: [:], settings: settings.engine)
+        self.engine = engine
         let wp = WindowProvider()
         windowProvider = wp
         let pp = PaneProvider(windows: wp)
@@ -124,14 +128,30 @@ final class AppController {
     }
 
     func start() {
+        let resolver = SetupResolver(store: SetupStore(directory: AppPaths.setups), engine: engine)
+        self.resolver = resolver
+        setups = SetupController(
+            resolver: resolver, displays: displayProvider, notifier: notifier,
+            cameraID: { [weak self] in CameraCapture.pick(CameraCapture.devices(), preferred: self?.settings.cameraID)?.id },
+            calibrate: { [weak self] keys, done in self?.startCalibration(keys ?? [], completion: done) },
+            noticesEnabled: { [weak self] in self?.noticesEnabled ?? false }
+        )
+        // A switch/new-place notice or a manual pick changes calibratedDisplays and the menu: same refresh path.
+        setups.onChange = { [weak self] in self?.updateStatus(); self?.statusItem?.update() }
+        setups.start()   // before the state below is first computed, so needsCalibration reflects the resolved setup
         statusItem = StatusItemController(app: self)
         notifier.onOpen = { [weak self] n in self?.open(n) }
         notifier.onChange = { [weak self] in self?.statusItem?.update() }
         displaysChanged()
-        displayProvider.onChange = { [weak self] in self?.displaysChanged() }
+        displayProvider.onChange = { [weak self] in
+            self?.displaysChanged()
+            self?.setups.environmentMayHaveChanged()
+        }
         system.onChange = { [weak self] suspended in
             self?.conditions.suspended = suspended
-            if suspended { self?.saveLearned() }
+            // Wi-Fi and screens often change while asleep/locked: re-resolve on the way back instead of
+            // waiting for the next unrelated trigger.
+            if suspended { self?.setups.saveNow() } else { self?.setups.environmentMayHaveChanged() }
             self?.updateStatus()
         }
         conditions.suspended = system.isSuspended   // a login item can start on a locked screen
@@ -351,7 +371,10 @@ final class AppController {
         actuator.moveCursor = settings.moveCursor
         actuator.syntheticClickFallback = settings.engine.syntheticClickFallback
         actuator.paneBoundaryMargin = settings.engine.paneBoundaryMargin
-        if settings.cameraID != old.cameraID { stopCamera() }   // the next start opens the new device
+        if settings.cameraID != old.cameraID {
+            stopCamera()   // the next start opens the new device
+            setups.environmentMayHaveChanged()
+        }
         if settings.launchAtLogin != old.launchAtLogin { applyLoginItem(settings.launchAtLogin) }
         if !settings.showGazeDot { gazeDot.show(at: nil) }
         updateStatus()
@@ -393,8 +416,24 @@ final class AppController {
     /// A paused Focus sends no samples (wantsCamera is false), so a calibration started then could never finish.
     var canCalibrate: Bool { calibration == nil && conditions.cameraGranted && !conditions.userPaused && !displays.isEmpty }
 
-    func startCalibration(_ keys: [String]) {
-        guard canCalibrate else { return }
+    /// Onboarding's Calibrate step: the very first run has no active setup yet (nothing has matched or been
+    /// created), so start one; every later visit (redoing the step, or a fresh launch that already matched
+    /// a place) recalibrates whichever setup is active.
+    func calibrateOrRecalibrate() {
+        if resolver.activeID == nil { setups.calibrateThisPlace() } else { setups.recalibrate() }
+    }
+
+    /// `completion`, when given (SetupController's calibration hand-off), receives the finished screens
+    /// instead of this file storing them: see `calibrationEnded`.
+    func startCalibration(_ keys: [String], completion: (([String: DisplayCalibration]) -> Void)? = nil) {
+        guard canCalibrate else { completion?([:]); return }
+        // #32: every calibration must land in a setup. A menu/Settings call (no `completion`) with no
+        // active setup would otherwise finish and have nowhere to store its results — silently losing the
+        // work. Delegate to the same path "New place detected"/Setup ▸ use: it creates a setup for this
+        // place and calibrates whatever that setup is still missing (so `keys` is moot here: a brand-new
+        // setup's screens are all unmapped anyway).
+        guard completion != nil || resolver.activeID != nil else { return setups.calibrateThisPlace() }
+        calibrationCompletion = completion
         let keys = keys.isEmpty ? displays.map(\.key) : keys.filter { k in displays.contains { $0.key == k } }
         let targets = CalibrationLayout.targets(for: displays)
         let screens = keys.map { CalibrationRun.Screen(key: $0, targets: targets[$0] ?? []) }
@@ -409,35 +448,32 @@ final class AppController {
         updateStatus()   // .calibrating → wantsCamera
     }
 
-    /// Only a finished run changes anything. New calibrations replace old ones (and their learned clicks) per screen.
+    /// Only a finished run produces anything (empty on cancel). Storing it — merging into the target setup and
+    /// reloading the engine — is `SetupResolver.storeCalibrations`'s job, not this file's: reached either through
+    /// `completion` (SetupController started this run) or, for a plain menu/onboarding recalibration, straight
+    /// into whichever setup is active.
     private func calibrationEnded(_ run: CalibrationRun) {
         calibration = nil
         syncClickSuppression()
         if onboardingOpen { onboardingWindow?.makeKeyAndOrderFront(nil) }   // back to the guide's calibrate step
-        var all = engine.calibrations
-        for (k, c) in run.results where run.phase == .finished { all[k] = c }
-        // Also on cancel: resets the latch, so an action latched before the calibration can't swallow the first switch.
-        engine.load(all)
-        if run.phase == .finished, !run.results.isEmpty {
-            learnedDirty = true
-            saveLearned()
+        let result = run.phase == .finished ? run.results : [:]
+        if let completion = calibrationCompletion {
+            calibrationCompletion = nil
+            completion(result)
+        } else if !result.isEmpty, let id = resolver.activeID {
+            do { try resolver.storeCalibrations(result, into: id) } catch {
+                log.error("Saving calibration failed: \(error.localizedDescription, privacy: .public)")
+            }
         }
         updateStatus()
     }
 
-    /// The engine holds the setup's calibrations plus what it learned from clicks: it is the source of truth.
-    /// Stays dirty until a write succeeds, so a failed save is retried at the next pause, lock, 5-min tick or quit.
+    /// What the engine learned from clicks belongs to the active setup; `SetupResolver.saveActive` is the
+    /// only thing that writes it. Guarded so an idle 5-min tick or pause doesn't attempt a write for nothing.
     func saveLearned() {
         guard learnedDirty, !options.smoke else { return }   // bench mode writes nothing
-        setup.calibrations = engine.calibrations
-        setup.fingerprint = Fingerprint(displays: displayProvider.fingerprints, cameraID: settings.cameraID ?? "default", wifiSSID: nil)
-        do {
-            try setupStore.save(setup)
-            learnedDirty = false
-        } catch {
-            // ponytail: logged only, AppStatus has no "can't save" slot.
-            log.error("Saving calibrations failed: \(error.localizedDescription, privacy: .public)")
-        }
+        setups.saveNow()
+        learnedDirty = false
     }
 
     private func displaysChanged() {
@@ -458,8 +494,12 @@ final class AppController {
     /// Before the guide is done every screen is uncalibrated on purpose, so there is nothing to announce yet.
     private var noticesEnabled: Bool { settings.onboardingCompleted && !options.smoke }
 
+    /// Ruling 8: while the resolver is auto-matching (no manual pick), a display/layout notice would fire
+    /// alongside — or just before — "New place detected"/a setup switch, and (being keyed by display, not by
+    /// setup) never gets swept once the engine pauses with empty calibrations. Both notices only make sense
+    /// once a manual pick (`overrideID`) has taken the resolver out of that loop.
     private func noticeDisplays(old: [DisplayFingerprint]) {
-        guard noticesEnabled else { return }
+        guard noticesEnabled, resolver.overrideID != nil else { return }
         let fresh = NotificationPolicy.newDisplays(present: displays.map(\.key), calibrated: calibratedKeys,
                                                    notified: settings.notifiedDisplays)
         for k in fresh { notifier.post(.newDisplay(k), name: names[k]) }
@@ -479,8 +519,12 @@ final class AppController {
         for n in notifier.pending {
             switch n {
             case .drift(let k): if !drifting.contains(k) { notifier.take(n) }
-            case .newDisplay(let k): if !present.contains(k) || calibratedKeys.contains(k) { notifier.take(n) }
-            case .layoutChanged: break
+            // Also swept the moment the resolver goes back to auto-matching (ruling 8): a display notice
+            // posted under a manual pick would otherwise survive the pick being dropped.
+            case .newDisplay(let k):
+                if !present.contains(k) || calibratedKeys.contains(k) || resolver.overrideID == nil { notifier.take(n) }
+            case .layoutChanged, .setupSwitched: break
+            case .newPlace: if resolver.activeID != nil { notifier.take(n) }   // matched or just calibrated
             }
         }
         guard noticesEnabled else { return }
@@ -491,13 +535,24 @@ final class AppController {
         }
     }
 
-    /// A clicked notification or menu notice: the fix is always a calibration.
+    /// A clicked notification or menu notice. The display/layout/new-place ones need a calibration, so they
+    /// wait (like before) until one can start; `setupSwitched` is purely informational and just dismisses.
     func open(_ n: FocusNotice) {
-        guard canCalibrate else { return }   // e.g. paused: keep the notice until it can be acted on
-        notifier.take(n)
         switch n {
-        case .drift(let k), .newDisplay(let k): startCalibration([k])
-        case .layoutChanged: startCalibration([])
+        case .drift(let k), .newDisplay(let k):
+            guard canCalibrate else { return }
+            notifier.take(n)
+            startCalibration([k])
+        case .layoutChanged:
+            guard canCalibrate else { return }
+            notifier.take(n)
+            startCalibration([])
+        case .newPlace:
+            guard canCalibrate else { return }
+            notifier.take(n)
+            notifier.newPlaceAction?()
+        case .setupSwitched:
+            notifier.take(n)
         }
     }
 

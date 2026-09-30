@@ -87,6 +87,7 @@ struct OnboardingView: View {
         switch step {
         case .welcome: welcome
         case .permissions: permissions
+        case .places: places
         case .calibrate: calibrate
         case .adjust: adjust
         case .tryIt: tryIt
@@ -150,6 +151,10 @@ struct OnboardingView: View {
 
     private var allowed: some View { Text("✓ Allowed").foregroundStyle(.green) }
 
+    /// Its own "Continue"/"Skip" (never blocked) just advances the same `step`; the generic footer button
+    /// below does too, so either one works.
+    private var places: some View { PlacesStep { if let next = step.next { step = next } } }
+
     private var calibrate: some View {
         VStack(alignment: .leading, spacing: 16) {
             title("Map your screens")
@@ -163,7 +168,7 @@ struct OnboardingView: View {
                     Text(app.calibratedKeys.contains(d.key) ? "✓ \(name) is mapped" : "\(name): not mapped yet")
                 }
                 let all = app.displays.allSatisfy { app.calibratedKeys.contains($0.key) }
-                Button(all ? "Redo Calibration" : "Start Calibration") { app.startCalibration([]) }
+                Button(all ? "Redo Calibration" : "Start Calibration") { app.calibrateOrRecalibrate() }
                     .disabled(!app.canCalibrate)
                 if app.conditions.userPaused {
                     Text("Focus is paused. Resume it from the menu bar to calibrate.").font(.caption).foregroundStyle(.secondary)

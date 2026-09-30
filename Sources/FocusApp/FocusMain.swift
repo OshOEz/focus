@@ -25,5 +25,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller?.start()
     }
 
-    func applicationWillTerminate(_ notification: Notification) { controller?.saveLearned() }
+    func applicationWillTerminate(_ notification: Notification) {
+        guard let c = controller, !c.options.smoke else { return }   // bench mode writes nothing
+        c.setups.saveNow()
+    }
 }

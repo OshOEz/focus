@@ -16,9 +16,19 @@ enum SelfTest {
         report["camera"] = "\(Permissions.camera)"
         report["accessibility"] = "\(Permissions.accessibility)"
         report["location"] = "\(Permissions.location)"
-        let displays = DisplayProvider().displays
+        let dp = DisplayProvider()
+        let displays = dp.displays
         report["displays"] = displays.map { ["key": $0.key, "frame": [$0.frame.minX, $0.frame.minY, $0.frame.width, $0.frame.height]] }
         report["windows"] = WindowProvider().windows().count   // CGWindowList: no Screen Recording prompt for metadata
+        // Enumeration never prompts (CameraCapture.devices()'s own guarantee): a real cameraID lets the
+        // resolver match a saved setup exactly like a launch would, without opening the camera.
+        let resolver = SetupResolver(store: SetupStore(directory: AppPaths.setups),
+                                      engine: FocusEngine(calibrations: [:], settings: FocusSettings()))
+        if let cameraID = CameraCapture.pick(CameraCapture.devices(), preferred: nil)?.id {
+            resolver.resolve(EnvironmentFingerprinter.current(displays: dp.fingerprints, cameraID: cameraID))
+        }
+        report["setups"] = resolver.setups.count
+        if let name = resolver.active?.name { report["activeSetup"] = name }
         if let d = displays.first {
             // Identity calibration of the first display, then a steady gaze at its centre → expect `.display(key)`.
             let pose = PoseFeature(yaw: 0, pitch: 0, faceX: 0.5, faceY: 0.5)

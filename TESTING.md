@@ -37,3 +37,12 @@ Lancer en release (le debug est ~15× plus lent) depuis un terminal qui a l'acc�
 - [ ] Point du regard (Réglages, désactivé par défaut) : le point rouge suit le regard, passe d'un écran à l'autre, ne prend ni clic ni focus ; il disparaît quand on le désactive, en pause et pendant une calibration.
 - [ ] Débrancher un écran puis le rebrancher : « New screen connected » une seule fois (pas au rebranchement suivant). Notifications refusées : l'avis apparaît en « ⚠︎ » dans le menu et l'œil porte un badge ; cliquer lance la calibration.
 - [ ] Verrouiller l'écran : la LED caméra s'éteint ; déverrouiller : le suivi reprend.
+
+## Setups (needs a second screen or a USB camera)
+- [ ] Unplug the external screen: within ~1 s the menu shows the matching setup, or "New place detected" once (not once per callback).
+- [ ] Plug it back: the previous setup comes back with a "Now using …" notification; clicks learned before still apply.
+- [ ] With Location allowed, switch Wi-Fi between two networks while screens stay the same: within 15 s the setup follows.
+- [ ] Pick a setup by hand in Setup ▸: it stays until a screen, camera or network change.
+- [ ] Close the lid with an external screen attached (clamshell): no "New place detected" while the display list is rebuilding.
+- [ ] Setup ▸: rename (blank name refused), recalibrate the active one, delete a non-active one (confirmation), delete the active one → "Calibrate This Place…" appears, no notification.
+- [ ] Onboarding ▸ Recognise your places: "Allow Wi-Fi Name" shows the macOS Location prompt once; Allow → check mark within 1 s; Don't Allow → "Open System Settings"; Skip always works.
