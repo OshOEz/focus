@@ -130,5 +130,5 @@ time.
 - References read, not copied: [gazectl](https://github.com/jnsahaj/gazectl),
   [AeroSpace](https://github.com/nikitabobko/AeroSpace), [Rectangle](https://github.com/rxhanson/Rectangle).
 
-Full licence texts: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Documentation:
+Focus is released under the [MIT License](LICENSE). Full third-party licence texts: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Documentation:
 [docs/wiki/Home.md](docs/wiki/Home.md).
