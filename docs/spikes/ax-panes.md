@@ -16,9 +16,9 @@ Apps testées : celles ouvertes sur la machine de l'utilisateur. Les autres apps
   1512×859). Le panneau utile est le **focusable le plus profond** ; les englobants doivent être ignorés.
 
 ## Conclusion
-- Règle générique retenue pour `AXPaneProvider` (plan 4) : sous `AXWebArea` (ou la fenêtre pour
+- Règle générique retenue pour `AXPaneProvider` : sous `AXWebArea` (ou la fenêtre pour
   les apps natives), collecter les éléments `focusable=true` d'au moins 200×150 pt qui n'ont
   **aucun descendant focusable de même taille minimale** ; ce sont les panneaux.
-- Ajouter `com.spotify.xirp` à `PaneApps.bundleIDs` (plan 4).
+- Ajouter `com.spotify.xirp` à `PaneApps.bundleIDs`.
 - Electron : réessayer la lecture de l'arbre après ~1 s si elle est vide.
 - Apps qui exigent le clic synthétique : aucune constatée à ce stade (Xirp n'en a pas besoin).

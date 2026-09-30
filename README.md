@@ -6,7 +6,7 @@ keyboard before your first key press. The click you used to make first is gone.
 
 ## The problem
 
-With two or three displays, your eyes move faster than your keyboard focus. You glance at the terminal on the
+With two or three displays, your eyes move faster than your keyboard focus. You look at the terminal on the
 left, start typing, and the text goes into the chat window on the right, because that is where you last
 clicked. Every switch costs a click, and every forgotten click costs a mistyped command.
 
@@ -34,7 +34,7 @@ clicked. Every switch costs a click, and every forgotten click costs a mistyped 
 - **Calm by design** — while you type, turning to another display still switches, after roughly one
   second, but reading a neighbouring window or pane waits 3 s (adjustable, 1–10 s). Any touch of the mouse
   or trackpad — move, click, scroll — blocks every switch for the next 1.5 s, so a drag or a long scroll
-  never gets undercut by a stray glance. A glance that ends before the delay does nothing, and so does a
+  never gets undercut by a stray look. A look that ends before the delay does nothing, and so does a
   head pose that points at no display at all, like reading your phone.
 - **Tunable edge** — "Head turn needed" (30–70 %, default 50 %) sets where, along each pair of displays'
   calibrated ranges, the switch fires: lower switches on a small turn, higher needs a firmer one.
@@ -118,10 +118,8 @@ time.
 - It needs to see your face: in a dark room or with the camera covered, the status reads "Waiting to see your face…".
 - Not notarised, not on the App Store; built and signed locally.
 - One user per Mac. macOS only.
-- The gaze model's weights come from a dataset licensed for non-commercial use only (see below).
 
 ## Credits and licences
-
 
 - Gaze pipeline vendored from [MacGaze](https://github.com/AACTools/MacGaze) (MIT).
 - BlazeGaze model from [WebEyeTrack](https://github.com/RedForestAI/WebEyeTrack) (MIT). Its weights were

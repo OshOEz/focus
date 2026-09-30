@@ -41,7 +41,7 @@ enum LiveAXBench {
             CGAssociateMouseAndMouseCursorPosition(1)
         }
 
-        // Plan 4's pane rows (P4.x) launch their own fixture(s) and never share `Run`'s single
+        // The pane rows launch their own fixture(s) and never share `Run`'s single
         // long-lived one, so they're appended after every branch below, not just the happy path.
         // `paneBenches()` re-checks accessibility and the screen lock itself (it can run with none
         // of this function's own state, e.g. when `Run` never launches at all).
@@ -89,7 +89,7 @@ enum LiveAXBench {
         // `Run`'s fixture must be fully gone before `paneBenches()` launches its own: the outer
         // `defer`s only fire when `run()` itself returns, i.e. *after* `paneBenches()` already ran,
         // so without this, two `focus-fixture` processes would be alive and fighting for frontmost
-        // and the pointer at once (audit #30 round 1 — a real flakiness risk, not hypothetical).
+        // and the pointer at once (a real flakiness risk, not hypothetical).
         let runResults = await Run(fx: fx).all()
         proc.terminate()
         proc.waitUntilExit()

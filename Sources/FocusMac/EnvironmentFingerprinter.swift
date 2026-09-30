@@ -1,7 +1,7 @@
 import CoreWLAN
 import FocusCore
 
-/// Reads where the Mac is, for setup matching (spec §7): screens, the camera in use, and the Wi-Fi name.
+/// Reads where the Mac is, for setup matching: screens, the camera in use, and the Wi-Fi name.
 public enum EnvironmentFingerprinter {
     @MainActor
     public static func current(displays: [DisplayFingerprint], cameraID: String) -> Fingerprint {

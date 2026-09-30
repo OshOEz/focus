@@ -1,5 +1,6 @@
 import UserNotifications
 
+/// What Focus tells the user about; the decision itself is FocusCore's NotificationPolicy.
 enum FocusNotice: Hashable {
     case drift(String)        // display key
     case newDisplay(String)   // display key

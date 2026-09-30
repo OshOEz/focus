@@ -21,7 +21,7 @@ clicks into its own window.
 | Learn from my clicks | on | toggle | Each click on the faced display becomes a calibration sample. | `engine.learnFromClicks` (`FocusEngine.recordClick`) |
 | Camera | Built-in (default) | built-in + every external/Continuity camera | Which camera GazeKit opens; a saved camera that's unplugged shows "not connected" and GazeKit falls back to the built-in one. | `cameraID` → `GazeTracker.cameraID` at the next camera start |
 | Move the pointer with focus | on | toggle | Puts the pointer on the newly focused window after a screen switch. | `moveCursor` → `FocusActuator.moveCursor` |
-| Show gaze dot | off | toggle | A red marker at the estimated gaze point. | `showGazeDot` (overlay: plan 3b Task 9) |
+| Show gaze dot | off | toggle | A red marker at the estimated gaze point. | `showGazeDot` (overlay: `GazeDot.swift`) |
 | Pause shortcut | ⇧⌘G | any key + ⌘, ⌥ or ⌃ | System-wide pause/resume. Esc cancels recording; a combo another app holds is refused and the old one is kept. | `hotKey` → Carbon `HotKey` (`setHotKey`) |
 | Open at login | on | toggle | Registers Focus as a login item. The default is applied once (`loginItemDefaultApplied`), never in `--smoke`/`--selftest` or an unbundled `swift run`. | `launchAtLogin` → `SMAppService.mainApp` |
 | Recalibrate All / per display | — | buttons | Starts a calibration run; disabled while calibrating, paused, or without camera access. | `AppController.startCalibration` |
@@ -31,8 +31,9 @@ clicks into its own window.
 
 | Constant | Value | Where / why |
 |---|---|---|
-| `FocusSettings.screenTypingPause` | 1 s | Screens may switch this soon after a keystroke even while panes wait the typing pause. |
-| `mousePause` | 1.5 s | Any mouse activity holds every switch; field exists but has no UI. |
+| `FocusSettings.screenTypingPause` | 1 s | Screens may switch this soon after a keystroke even while panes wait the typing pause: turning to another screen is deliberate, reading a neighbour pane is not. |
+| `mousePause` | 1.5 s | Any mouse activity holds every switch; field exists but has no UI: 1.5 s covers a drag or scroll without being noticed. |
+| Calibration timing | 0.6 s travel + 1.0 s hold per dot | `CalibrationRun.travel`/`hold`: the eyes land during travel, the hold collects a stable median. |
 | `CalibrationBuilder.minScreenSeparation` | 0.05 (≈ 3°) | Two displays with closer head poses can't be told apart by head direction; about twice the pose jitter at rest. |
 
 ## File and loading

@@ -18,14 +18,10 @@ catch up is gone; this wiki is the engineering reference for how, page by page.
 | [Benches](Benches.md) | You're running or reading `focus-bench`: what each group proves, and which findings it already caught. |
 | [Settings](Settings.md) | You need a setting's default, range, what it does, and why — read from `FocusSettings`, not guessed. |
 | [Troubleshooting](Troubleshooting.md) | The menu bar shows a status you don't understand, a setup loaded wrong, panes won't focus, or permissions vanished after a rebuild. |
-| [Decisions](Decisions.md) | You want the ruling and the "why" behind a specific choice, oldest plan first. |
+| [Decisions](Decisions.md) | You want the ruling and the "why" behind a specific choice. |
 
-## Specs and plans
+## Other docs
 
-- [`2026-09-29-focus-design.md`](../superpowers/specs/2026-09-29-focus-design.md) — the original spec.
-- [`docs/superpowers/plans/`](../superpowers/plans/) — the plan for each numbered piece of work, plus
-  [`2026-09-30-reconciliation.md`](../superpowers/plans/2026-09-30-reconciliation.md), which settles
-  conflicts between plans 3a/3b/4/5 (see [Decisions](Decisions.md)).
 - [`TESTING.md`](../../TESTING.md) — how to run `swift test` and read its output.
 - [`THIRD_PARTY_NOTICES.md`](../../THIRD_PARTY_NOTICES.md) — vendored code and its license.
 

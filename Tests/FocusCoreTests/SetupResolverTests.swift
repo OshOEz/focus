@@ -70,7 +70,7 @@ private let unknown = place([builtIn], camera: "usb-cam")
         #expect(r.current == unknown)
     }
 
-    /// #32: a calibration reached with no active setup (skipped guide, an unmatched place, or the active
+    /// A calibration reached with no active setup (skipped guide, an unmatched place, or the active
     /// setup just deleted) must not lose its results. `AppController.startCalibration` now delegates that
     /// case to `SetupController.calibrateThisPlace`, which is exactly `createSetup` + `storeCalibrations` —
     /// this proves that pair creates a setup, activates it, and actually keeps what's stored in it.

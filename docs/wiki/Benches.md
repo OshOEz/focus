@@ -42,11 +42,12 @@ and so does a missing `lint.txt` ("lint not run").
 
 | # | group | what it proves |
 |---|---|---|
+| 0 | no-prompt lint | nothing unattended can prompt |
 | 1 | unit | `swift test` exits 0 (the report lists the test count per bundle) |
 | 2 | engine | the real `FocusEngine` makes the right decisions at the right time on synthetic desks |
-| 3 | vision | GazeKit on fixture images (plan 3a Task 12) |
-| 4 | live AX | windows, actuator, input monitor against a fixture app (Task 13); panes (plan 4) |
-| 5 | app smoke | `scripts/build-app.sh` + `Focus --selftest` (plan 3b); skipped until that script exists |
+| 3 | vision | GazeKit on fixture images |
+| 4 | live AX | windows, actuator, input monitor against a fixture app; panes |
+| 5 | app smoke | `scripts/build-app.sh` + `Focus --selftest`; skipped if that script is missing |
 
 ### Group 2: engine scenarios
 
@@ -56,10 +57,10 @@ first action that lands on the target screen.
 
 | check | desk | script | pass rule |
 |---|---|---|---|
-| `switch-latency/<desk>` | side-by-side, stacked, laptop-below | every ordered pair: look A 1.5 s, turn A→B 0.25 s, look B 1.5 s | every pair switched, p95 < 500 ms (spec success criterion) |
+| `switch-latency/<desk>` | side-by-side, stacked, laptop-below | every ordered pair: look A 1.5 s, turn A→B 0.25 s, look B 1.5 s | every pair switched, p95 < 500 ms (success criterion) |
 | `bezel/<desk>` | same three | every ordered pair sharing an edge: look A 1 s, stare at the edge midpoint 10 s | ≤ 1 switch |
 | `bezel/<desk>@<d>pt` | side-by-side at 1300/1000 pt, laptop-below at 1500/1300/1000 pt (head distance) | same | ≤ 1 switch |
-| `quick-glance` | side-by-side | L 1 s, R 0.2 s, L 1 s | 0 actions |
+| `quick-look` | side-by-side | L 1 s, R 0.2 s, L 1 s | 0 actions |
 | `typing/screen` | side-by-side | L 1 s, keystroke, R 3 s | nothing before 1.0 s, first ≤ 1.6 s |
 | `typing/pane` | single, two half windows | left 1 s, keystroke, right 5 s | nothing before 3.0 s, first `.window(right)` ≤ 3.6 s |
 | `typing/off` | as above, `waitWhileTyping = false` | same | first ≤ 0.6 s |
@@ -67,19 +68,19 @@ first action that lands on the target screen.
 | `off-screen` | side-by-side | L 1 s, head down (pitch −0.7, a phone) 3 s, L 1 s | 0 actions, ≥ 90 % of off-screen frames `.lookingAway` |
 | `off-screen/<desk>-<where>@<d>pt` | laptop-below phone (20° below M) and lap (40°), side-by-side left/right (20° past the outer edge), stacked above (20° over T); 1800/1300/900 pt | nearest screen 1 s, away pose 3 s, back 1 s | 0 actions after the first look, ≥ 90 % `.lookingAway` |
 | `on-screen/<desk>` | side-by-side, stacked, laptop-below, single; 700/900/1300/1800/2400 pt | 11 × 11 points over each screen (1-99 %), 0.4 s each | no point `.lookingAway` |
-| `screen-choice/<desk>` | same | same points, each reached from its own screen's centre (0.4 s) | every point `.facing` its own screen; laptop-below ≤ 3 % wrong (known limit, Decision-engine.md §3) |
+| `screen-choice/<desk>` | same | same points, each reached from its own screen's centre (0.4 s) | every point `.facing` its own screen; laptop-below ≤ 3 % wrong (known limit, [Decision-engine](Decision-engine.md), Screen boundary) |
 | `on-screen-lean/<desk>` | same four desks; 900/1800 pt | centre and 5 % inside each edge, 0.4 s, then 0.6 s with the face shifted ±0.1/±0.2 (x) or ±0.1 (y) | never `.lookingAway` |
 | `switch-latency/laptop-below@<d>pt` | laptop-below at 900/700 pt | as `switch-latency` | as `switch-latency` |
 | `no-face` | side-by-side | L 1 s, R 0.2 s, no face 1 s, R 1 s | nothing without a face, first ≥ 300 ms after it returns |
 | `latch` | side-by-side, windows only on L | L 1 s, R 3 s | exactly one `.display(R)` |
-| `window-accuracy` | single, two half windows | 100 seeded fixations ≥ 10 % of the width from the split, 1 s each | accuracy ≥ 0.90 (live target 0.80, spec §1) |
+| `window-accuracy` | single, two half windows | 100 seeded fixations ≥ 10 % of the width from the split, 1 s each | accuracy ≥ 0.90 (live target 0.80) |
 | `learning` | single | gaze bias (0.06, −0.04); 60 clicks | mean map error over 30 probes halves |
 | `recalibration-trigger` | single | bias (0.3, 0.3), clicks until flagged; control without bias, 60 clicks | flagged within 15 clicks; control never |
-| `setups-two-places` (`SetupScenarios.swift`, plan 5) | — | built-in + Dell at home (SSID "Home"), built-in + LG at the office (no SSID): `SetupResolver.resolve` at each place, a head turn each way, a click learned at home | right screen focused at each place; the click learned at home survives the trip to the office and back; worst switch < 500 ms |
-| `setups-fingerprint` (`SetupScenarios.swift`, plan 5, deferred from plan 5 task 3) | — | `EnvironmentFingerprinter.current(displays: DisplayProvider().fingerprints, cameraID:)` against `CGGetActiveDisplayList` | screens fingerprinted == active screens; camera ID passed through; **`skip`** ("Location not granted…") instead of a check when `Permissions.location != .granted` — reading the Wi-Fi name needs a grant this bench never requests |
+| `setups-two-places` (`SetupScenarios.swift`) | — | built-in + Dell at home (SSID "Home"), built-in + LG at the office (no SSID): `SetupResolver.resolve` at each place, a head turn each way, a click learned at home | right screen focused at each place; the click learned at home survives the trip to the office and back; worst switch < 500 ms |
+| `setups-fingerprint` (`SetupScenarios.swift`) | — | `EnvironmentFingerprinter.current(displays: DisplayProvider().fingerprints, cameraID:)` against `CGGetActiveDisplayList` | screens fingerprinted == active screens; camera ID passed through; **`skip`** ("Location not granted…") instead of a check when `Permissions.location != .granted` — reading the Wi-Fi name needs a grant this bench never requests |
 
 A failing row is a finding, not a bench bug: keep the rule, record the numbers, fix the engine (or tune a
-knob with the numbers) test-first. Example (issue #17, 2026-09-30): staring at the seam flipped focus
+knob with the numbers) test-first. Example (2026-09-30): staring at the seam flipped focus
 5 (side-by-side) and 4 (laptop-below) times. A floor that fell back to centroid geometry below
 `minScreenSeparation` fixed the default 1800 pt head distance but left the cliff at 1000-1300 pt
 (side-by-side) and 1400-1700 pt (laptop-below), 2-3 flips each. `ScreenClassifier.gapFraction` now widens
@@ -107,7 +108,7 @@ The camera is never opened here — no Camera TCC prompt, ever. `--fixtures` poi
 a `CIPerspectiveTransform` skew) stand in for the head motion a real video would show. Each case
 composites the (possibly transformed) photo over a mid-grey 1280×720 canvas, renders it into a
 fresh `CVPixelBuffer` with one shared `CIContext`, and hands it to `GazeTracker.process(pixelBuffer:
-time:)` (public since Task 6) 5 times, on a **fresh `GazeTracker` per case** — the landmarker tracks
+time:)` 5 times, on a **fresh `GazeTracker` per case** — the landmarker tracks
 state across frames, so reusing one tracker would let an earlier case's face bleed into the next.
 
 | check | transform | pass rule |
@@ -123,7 +124,7 @@ state across frames, so reusing one tracker would let an earlier case's face ble
 A `GazeTracker()` init failure (e.g. the CoreML models aren't fetched — `scripts/fetch-models.sh`)
 fails every check in the group with the same reason, rather than crashing the bench.
 
-**Why `yaw-follows-turn` is a skip (controller ruling, 2026-09-30).** A 2-D `CIPerspectiveTransform`
+**Why `yaw-follows-turn` is a skip.** A 2-D `CIPerspectiveTransform`
 skew of a flat photo isn't a real head turn: it distorts overall shape without the depth cues a real
 turn gives, so FaceMesh/HeadPoseSolver's yaw stays at noise level (≈0.01–0.03 rad). Measured yaws at
 fractions [0.2, 0.1, 0, −0.1, −0.2]: [−0.027, −0.022, 0.013, −0.012, −0.025] rad. That says the
@@ -135,7 +136,7 @@ numbers as a skip and the sign check is done live with a real head.
 FocusMac against the real window server, the real Accessibility API and real (synthetic) input. The
 target is `focus-fixture` (`Sources/FocusFixture`), a small app built next to `focus-bench`: two
 640×420 windows 120 pt below the top of the primary screen (x = 100 and x = 800); the second holds a
-vertical `NSSplitView` of two text views (plan 4's panes). Once on screen it prints one JSON line —
+vertical `NSSplitView` of two text views (the pane rows use it). Once on screen it prints one JSON line —
 `pid`, window ids and CG frames, plus `selfOnScreen` (its own windows in CGWindowList) and
 `selfListed` (what a `WindowProvider` *inside the fixture* lists of them) — and quits on its own after
 `--quit-after` seconds (the bench passes 60), so it never lingers even if the bench dies.
@@ -160,7 +161,7 @@ can't make "is the user active?" true.
 | `e2e-scripted-gaze` | wait for quiet input (3 s no key, 1.5 s no mouse; ≤ 10 s else `skip` "user active"); identity 5-point calibration, pose 0; `ScriptedGazeSource` replays 2 s at 15 fps at window 2's centre → `FocusEngine.decide` → `FocusActuator.perform`; then towards window 1 | each focused ≤ 1.5 s from the trace start |
 | `cursor-warp` | main screen split into two virtual displays between the windows, focus = window 2; `perform(.window(w1))` crosses displays | pointer inside window 1 |
 | `warp-is-not-mouse-activity` | `InputActivity.lastMouse` before/after two warps | unchanged ± 1 ms |
-| `synthetic-click-ignored` | window 2, left pane focused by AX; post down/up at the right pane's centre exactly as `FocusActuator.focusPane` does: `.privateState` source, marker `0x464F4355` (R10), `.cgSessionEventTap` | right pane focused (`PaneProvider.focusedPaneIndex`: the text view got the click), HID `leftMouseDown` idle counter not reset, `InputMonitor.onClick` not called |
+| `synthetic-click-ignored` | window 2, left pane focused by AX; post down/up at the right pane's centre exactly as `FocusActuator.focusPane` does: `.privateState` source, marker `0x464F4355`, `.cgSessionEventTap` | right pane focused (`PaneProvider.focusedPaneIndex`: the text view got the click), HID `leftMouseDown` idle counter not reset, `InputMonitor.onClick` not called |
 | `input-sees-key` | post F18 down/up | `lastKey` ≤ 0.5 s |
 | `input-sees-click` | post an unmarked click at window 1's centre | `onClick` ≤ 0.5 s at ≤ 2 pt, `lastMouse` updated |
 | `hotkey` | `HotKey(⌃⌥⌘F19)`, post F19 with those flags **and `.maskSecondaryFn`** | action ≤ 0.5 s; `HotKey` nil → `fail` "combination taken" |
@@ -176,10 +177,10 @@ Otherwise the row is `skip`, naming the covering window, and nothing is posted. 
 A `defer` always terminates the fixture, re-activates the app that was frontmost, and warps the pointer
 back to where it was. The group takes ~8 s.
 
-**Pane rows (`PaneBench.swift`, `paneBenches()`, plan 4 task 9).** Appended after the rows above,
+**Pane rows (`PaneBench.swift`, `paneBenches()`).** Appended after the rows above,
 regardless of which branch produced them (locked screen, no Accessibility, fixture missing — every path
 still yields all 8 rows, `skip`ped the same way). Each row group launches its own `focus-fixture`, with
-the flags task 8 added to it, and terminates it before the next group:
+the flags listed below, and terminates it before the next group:
 
 | row | fixture flags | how | pass rule |
 |---|---|---|---|
@@ -208,17 +209,17 @@ above already guards against, not a product defect.
   `FocusActuator.focusPane` now posts at `.cgSessionEventTap`: the click still reaches the text view
   (pane focused) and the counter keeps running (261.08 → 261.24 s).
 - *The Dock covered every screen for the occluder rule (fixed).* The Dock owns a click-through window at
-  layer 20 spanning the whole display with alpha 1, always on screen. R11's rule counted it, so
+  layer 20 spanning the whole display with alpha 1, always on screen. The occluder rule counted it, so
   `PaneClick` found no safe point and the pane click fallback never fired; this guard skipped its four
   posting rows ("Dock layer 20"). `FocusActuator.occluders` now drops that window and counts the Dock's
   strip instead (`dockStrip`: `NSScreen.frame` minus `visibleFrame`'s Dock side). Only that window: its
   bounds equal a display frame **and** its layer is 20; Launchpad/Mission Control, which also have the
-  size of a screen, sit at a different layer and remain obstacles (audit #27). Stack popups and Dock
+  size of a screen, sit at a different layer and remain obstacles. Stack popups and Dock
   menus stay ordinary occluders.
 
-### Group 5: app smoke (plan 3b)
+### Group 5: app smoke
 
-Placeholder: `scripts/build-app.sh` + `Focus.app --selftest`; `skip` until plan 3b adds the script.
+`scripts/build-app.sh` + `Focus.app --selftest`; `skip` if the script is missing.
 
 ## Adding a check
 
@@ -232,7 +233,7 @@ BenchResult.skipped(group: 5, name: "…", reason: "…")
 ```
 
 Metrics must be finite (JSON has no NaN; use −1 for "never"). `.check` drops `reason` on a pass (it
-explains a failure); `init(group:name:passed:detail:)` keeps `detail` on a pass too (plan 3b's rows carry
+explains a failure); `init(group:name:passed:detail:)` keeps `detail` on a pass too (group 5's rows carry
 the measured value there). Group labels come from `BenchResult.groupNames`.
 
 - **New engine scenario**: add one row to `EngineBench.scenarios` (`("name", { [myScenario()] })`).
@@ -249,7 +250,7 @@ the measured value there). Group labels come from `BenchResult.groupNames`.
 | screen locked | unlock; group 4 needs a live session |
 | user active (`e2e-scripted-gaze`) | hands off keyboard and mouse while the bench runs |
 | `ms-per-frame` skipped (debug build) | `swift build -c release` / `scripts/bench.sh` (group 3 never needs the camera — it only reads `portrait.jpg`) |
-| `scripts/build-app.sh` not there yet | lands with plan 3b |
+| `scripts/build-app.sh` not found | restore the script from the repo |
 
 ## The human part
 
@@ -257,19 +258,20 @@ What a bench cannot see (a real face, a real camera, the app's onboarding) is `s
 a guided session run by hand, the only script allowed to show permission dialogs. It runs
 `focus-gaze cameras`, `focus-gaze probe 10` (~15 samples/s, conf ≥ 0.5, lag 0-150 ms, yaw changes sign on a
 head turn, "no face" under a hand), `focus-gaze screens` with ≥ 2 displays, then builds and opens
-`build/Focus.app` for the onboarding once plan 3b provides `scripts/build-app.sh`. Answers go to
+`build/Focus.app` for the onboarding. Answers go to
 `build/bench/morning.md`; then the manual list in `TESTING.md`.
 
 See also: [Decision engine](Decision-engine.md) (what group 2 exercises) ·
 [Focusing windows and panes](Focusing-windows-and-panes.md) (what group 4 exercises).
 
-## Results — 2026-09-30, commit 1b76f98
+## Results — 2026-09-30
 
-`scripts/bench.sh` on macOS 27.0 (Build 26A428): **84 pass · 0 fail · 2 skip**. Full report:
+`scripts/bench.sh` on macOS 27.0 (Build 26A428): **83 pass · 0 fail · 2 skip**. Full report:
 `build/bench/report.md` (raw JSON per group alongside it).
 
 | Bench | Result | Key numbers | Skipped because |
 |---|---|---|---|
+| 0 No-prompt lint | PASS | no permission-request match | — |
 | 1 Unit | PASS | `swift test` exit 0 — 12 tests (FocusMacTests) + 17 (GazeKitTests) + 160 (FocusCoreTests), 3 bundles | — |
 | 2 Engine scenarios | PASS (53/54; 1 skip) | switch-latency p50 267 ms / p95 267-333 ms (laptop-below); bezel ≤ 1 switch everywhere; window-accuracy 1.0; learning error 0.071 → 0.018 (75 % drop, target ≤ 50 %); recalibration-trigger flagged at 10 clicks; `screen-choice/laptop-below` 39/1815 wrong (2.1 %, known limit ≤ 3 %); `setups-two-places` right screen both places, learned click kept, worst switch 400 ms | `setups-fingerprint`: Location not granted (Wi-Fi name unavailable without a prompt) |
 | 3 Vision | PASS (6/7; 1 skip) | `ms-per-frame` median 6.1 ms / p95 6.8 ms (release, target < 20 ms); frontal/shift/scale/roll/no-face all pass | `yaw-follows-turn`: always-skip by design (a still photo can't turn a head; checked live by `scripts/morning-check.sh`) |

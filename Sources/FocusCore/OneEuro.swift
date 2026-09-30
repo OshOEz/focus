@@ -5,6 +5,7 @@ import CoreGraphics
 
 /// 1€ filter (Casiez, Roussel & Vogel, CHI 2012): a first-order low-pass whose cutoff rises
 /// with the signal's speed, so a still head is smoothed hard (no jitter) and a turning head is
+/// followed with little lag. Focus runs it on yaw, pitch, eye and face.
 public struct OneEuroFilter: Sendable {
     public var minCutoff: Double        // Hz, smoothing at rest
     public var beta: Double             // extra cutoff (Hz) per unit/s of speed

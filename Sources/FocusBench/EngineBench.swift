@@ -18,7 +18,7 @@ enum EngineBench {
             return switchLatency("laptop-below@\(Int(distance))pt", d)
         } }),
         ("bezel", { desks.map { bezel($0.0, $0.1) } }),
-        // Closer heads widen the facing-edge gap; 1000-1700 pt is where the old floor's cliff sat (issue #17).
+        // Closer heads widen the facing-edge gap; 1000-1700 pt is where the old floor's cliff sat.
         ("bezel-close", { [("side-by-side", Desk.sideBySide, 1300.0), ("side-by-side", .sideBySide, 1000),
                            ("laptop-below", .laptopBelow, 1500), ("laptop-below", .laptopBelow, 1300),
                            ("laptop-below", .laptopBelow, 1000)].map { name, desk, distance in
@@ -26,7 +26,7 @@ enum EngineBench {
             d.distance = distance
             return bezel("\(name)@\(Int(distance))pt", d)
         } }),
-        ("quick-glance", { [quickGlance()] }),
+        ("quick-look", { [quickLook()] }),
         ("typing", { [typingScreen(), typingPane(wait: true), typingPane(wait: false)] }),
         ("mouse", { [mouse()] }),
         ("off-screen", { [offScreen()] }),
@@ -72,7 +72,7 @@ enum EngineBench {
 
     // MARK: - Scenarios
 
-    /// Spec success criterion: a deliberate head turn switches screens within 500 ms (p95).
+    /// Success criterion: a deliberate head turn switches screens within 500 ms (p95).
     static func switchLatency(_ name: String, _ desk: Desk) -> BenchResult {
         var latencies: [Double] = [], missed: [String] = []
         for (a, b) in pairs(desk) {
@@ -114,17 +114,17 @@ enum EngineBench {
                       metrics: ["max_switches": Double(worst)], reason: "\(worst) switches on \(worstPair)")
     }
 
-    /// A 200 ms glance at the other screen is shorter than the 300 ms dwell: no action.
-    static func quickGlance() -> BenchResult {
+    /// A 200 ms look at the other screen is shorter than the 300 ms dwell: no action.
+    static func quickLook() -> BenchResult {
         var sim = Sim(.sideBySide)
         sim.look(at: sim.centre("L"), for: 1)
         sim.look(at: sim.centre("R"), for: 0.2)
         sim.look(at: sim.centre("L"), for: 1)
-        return .check(group, "quick-glance", sim.actions.isEmpty, rule: "0 actions",
+        return .check(group, "quick-look", sim.actions.isEmpty, rule: "0 actions",
                       metrics: ["actions": Double(sim.actions.count)], reason: "\(sim.actions.map(\.action))")
     }
 
-    /// while typing, another screen still takes focus after ~1 s (screenTypingPause).
+    /// While typing, another screen still takes focus after ~1 s (screenTypingPause).
     static func typingScreen() -> BenchResult {
         var sim = Sim(.sideBySide)
         sim.look(at: sim.centre("L"), for: 1)
@@ -137,7 +137,7 @@ enum EngineBench {
                       metrics: ["first_ms": first < 0 ? -1 : ms(first)], reason: first < 0 ? "no action" : "first at \(ms(first)) ms")
     }
 
-    /// same-screen windows wait the full typingPause (3 s) — or not at all when the guard is off.
+    /// Same-screen windows wait the full typingPause (3 s) — or not at all when the guard is off.
     static func typingPane(wait: Bool) -> BenchResult {
         var settings = FocusSettings()
         settings.waitWhileTyping = wait
@@ -236,10 +236,10 @@ enum EngineBench {
         return [.check(group, "on-screen/\(name)", away.isEmpty, rule: "no point of any screen away at 700-2400 pt",
                        metrics: ["points": Double(points), "away": Double(away.count)],
                        reason: "away at \(away.prefix(5).joined(separator: ", "))"),
-                // Known limit (Decision-engine.md §3): laptop-below's three-screen junction corners.
+                // Known limit (Decision-engine.md, "Screen boundary"): laptop-below's three-screen junction corners.
                 name == "laptop-below"
                     ? .check(group, "screen-choice/\(name)", Double(wrong.count) <= 0.03 * Double(points),
-                             rule: "≤ 3 % of points on the wrong display at 700-2400 pt (known limit, see Decision-engine.md §3)",
+                             rule: "≤ 3 % of points on the wrong display at 700-2400 pt (known limit, see Decision-engine.md, Screen boundary)",
                              metrics: ["points": Double(points), "wrong": Double(wrong.count)],
                              reason: "wrong at \(wrong.prefix(5).joined(separator: ", "))")
                     : .check(group, "screen-choice/\(name)", wrong.isEmpty, rule: "every point faces its own screen at 700-2400 pt",
@@ -318,7 +318,7 @@ enum EngineBench {
                       metrics: ["actions": Double(sim.actions.count)], reason: "\(sim.actions.map(\.action))")
     }
 
-    /// Same-screen window choice from calibrated gaze, away from the split (live target 0.80, spec §1).
+    /// Same-screen window choice from calibrated gaze, away from the split (live target 0.80).
     static func windowAccuracy() -> BenchResult {
         let ws = halves(), width = Desk.single.displays[0].frame.width
         var sim = Sim(.single, windows: ws)

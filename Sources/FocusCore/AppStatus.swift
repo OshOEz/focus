@@ -82,7 +82,7 @@ public enum AppStatus: Equatable, Sendable {
 }
 
 public enum OnboardingStep: Int, CaseIterable, Sendable {
-    // `places` (plan 5): reading the Wi-Fi name only helps once a setup exists, and the first one is
+    // `places`: reading the Wi-Fi name only helps once a setup exists, and the first one is
     // created by `calibrate` — so it sits right before, after Location has a chance to be granted.
     case welcome, permissions, places, calibrate, adjust, tryIt, done
 

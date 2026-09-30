@@ -375,7 +375,7 @@ public final class CameraCapture: @unchecked Sendable {
             videoOutput.setSampleBufferDelegate(sampleBufferDelegate, queue: videoQueue)
         }
 
-        // ≤ 15 fps. Only the minimum frame duration is set, so the camera may still slow
+        // ≤ 15 fps: enough for head-pose dwell times of 100 ms and up, at a fraction of the CPU. Only the minimum frame duration is set, so the camera may still slow
         // down in low light rather than underexpose. Locking an unsupported rate raises an
         // uncatchable ObjC exception, hence the range check.
         let fps = configuration.preferredFrameRate

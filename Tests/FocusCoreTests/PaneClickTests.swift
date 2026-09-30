@@ -29,7 +29,7 @@ private func world(_ windows: [WindowInfo] = [win]) -> World {
 }
 
 @Test func noClickWhenAFloatingWindowOutsideWorldWindowsCoversTheCentre() {
-    // #19: World.windows only ever holds layer-0 windows (WindowProvider drops higher layers
+    // World.windows only ever holds layer-0 windows (WindowProvider drops higher layers
     // and Focus itself), so a floating panel (NSPanel .floating, PiP, a visio mini-window) never
     // shows up there — it must still block the click via the explicit `occluders` list.
     let floatingPanel = CGRect(x: 500, y: 150, width: 100, height: 100)

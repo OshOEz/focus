@@ -3,12 +3,14 @@ import Foundation
 import CoreGraphics
 #endif
 
-/// Engine/actuator knobs only (spec §8–9). App behaviour and one-shot flags (camera, hot key,
+/// Engine/actuator knobs only. App behaviour and one-shot flags (camera, hot key,
 /// launch at login, onboarding, notified displays) live in `AppSettings`, which wraps this as
 /// `engine`. Durations in seconds, margins as fractions of display width. Ranges are the
+/// Settings sliders': screenDwell 0.1…1, paneDwell 0.2…1.5,
 /// typingPause 1…10, headTurn 0.3…0.7.
 public struct FocusSettings: Codable, Sendable, Equatable {
     /// Screens may switch this long after the last keystroke even while panes wait `typingPause`
+    /// (turning to another screen is deliberate, unlike drifting to a neighbouring pane). Not a setting.
     public static let screenTypingPause = 1.0
 
     public var screenDwell = 0.3
@@ -16,10 +18,11 @@ public struct FocusSettings: Codable, Sendable, Equatable {
     public var waitWhileTyping = true
     public var typingPause = 3.0
     public var mousePause = 1.5
+    /// "Head turn needed", 0.3…0.7 (default 50 %); see ScreenClassifier.threshold.
     public var headTurn = 0.5
     /// How far (head-pose radians) past the region a screen's calibration dots span a pose still
     /// counts as that screen; beyond every screen it is "away". 0.2 from the sweep in
-    /// docs/wiki/Decision-engine.md §3: full screens on-screen from 0.1, a phone 20° (gaze) past the
+    /// docs/wiki/Decision-engine.md (Screen boundary): full screens on-screen from 0.1, a phone 20° (gaze) past the
     /// edge away up to 0.225. Named `offScreenDistance` (0.35 from the centroid) before; old files'
     /// value is ignored on purpose, it meant something else.
     public var offScreenMargin = 0.2
@@ -37,7 +40,7 @@ public struct FocusSettings: Codable, Sendable, Equatable {
 
 extension FocusSettings {
     /// Tolerant: a missing, renamed or mistyped key keeps its default instead of failing the
-    /// whole file, so adding a setting never resets the user's others (plan-1 follow-up).
+    /// whole file, so adding a setting never resets the user's others.
     public init(from decoder: any Decoder) throws {
         self.init()
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -51,7 +54,7 @@ extension FocusSettings {
         read(.syntheticClickFallback, &syntheticClickFallback); read(.learnFromClicks, &learnFromClicks)
         read(.windowStickMargin, &windowStickMargin); read(.paneBoundaryMargin, &paneBoundaryMargin)
         read(.minWindowSize, &minWindowSize)
-        paneDwell = min(max(paneDwell, 0.2), 1.5)   // range 200-1500 ms; guards hand-edited JSON
+        paneDwell = min(max(paneDwell, 0.2), 1.5)   // slider range 200-1500 ms; guards hand-edited JSON
     }
 }
 

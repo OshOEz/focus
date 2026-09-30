@@ -14,7 +14,7 @@ import FocusCore
 @Test func carbonModifiersFromEventFlags() {
     #expect(HotKey.carbonModifiers([.command, .shift]) == UInt32(cmdKey | shiftKey))
     #expect(HotKey.carbonModifiers([.control, .option, .capsLock]) == UInt32(controlKey | optionKey))
-    // R1 (reconciliation): the hot key lives on AppSettings.hotKey (HotKeySpec), not on FocusSettings.
+    // The hot key lives on AppSettings.hotKey (HotKeySpec), not on FocusSettings.
     #expect(AppSettings().hotKey.modifiers == UInt32(cmdKey | shiftKey))   // ⇧⌘G by default
     #expect(AppSettings().hotKey.keyCode == UInt32(kVK_ANSI_G))
 }

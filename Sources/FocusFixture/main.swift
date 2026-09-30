@@ -2,11 +2,11 @@ import AppKit
 import FocusMac
 
 // Test app for focus-bench: two plain windows side by side on the main screen; the second holds
-// a vertical split of two text views (plan 4 uses it for panes). Prints its window ids and frames,
+// a vertical split of two text views (the pane benches use it). Prints its window ids and frames,
 // plus how many of its own windows CGWindowList shows (`selfOnScreen`) and how many a
 // WindowProvider in this process lists (`selfListed`, must be 0: Focus never focuses itself).
 
-/// A pane's text view. Prints the plan 4 probe protocol (`pane-focused <i>` / `pane-clicked <i>`,
+/// A pane's text view. Prints the pane probe protocol (`pane-focused <i>` / `pane-clicked <i>`,
 /// flushed at once so the bench's line reader sees them without buffering delay).
 final class PaneTextView: NSTextView {
     var index = 0
@@ -73,7 +73,7 @@ let screen = NSScreen.screens[0]                 // primary: its top-left is the
     return scroll
 }
 let w1 = window(1, cgX: 100, size: CGSize(width: 640, height: 420))
-// Window 2 hosts the split: ≥ 800 pt wide so each pane clears the ≥ 300×300 pt bar (task 8 brief).
+// Window 2 hosts the split: ≥ 800 pt wide so each pane clears a ≥ 300×300 pt bar, well above the 200×150 pane minimum.
 let w2Size = CGSize(width: 820, height: 420)
 let w2x = min(800, screen.frame.width - w2Size.width)   // clamp: must still fit the primary screen
 let w2 = window(2, cgX: w2x, size: w2Size)

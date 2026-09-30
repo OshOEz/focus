@@ -3,7 +3,7 @@ import AVFoundation
 import FocusCore
 import FocusMac
 
-/// Keeps the engine on the right setup as the Mac moves between places (spec §7). SetupResolver decides;
+/// Keeps the engine on the right setup as the Mac moves between places. SetupResolver decides;
 /// this class adds the OS side: triggers, debouncing, names, notifications and the calibration hand-off.
 @MainActor
 final class SetupController {

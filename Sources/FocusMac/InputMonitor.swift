@@ -2,9 +2,9 @@ import AppKit
 import FocusCore
 import QuartzCore
 
-/// Keyboard and pointer activity without the Input Monitoring permission (Camera +
-/// Accessibility only). Times come from the hardware (HID) idle counters only, so Focus's own
-/// synthetic events (plan 4's pane click fallback, posted at the session tap: the HID tap
+/// Keyboard and pointer activity without the Input Monitoring permission (Focus asks
+/// only for Camera and Accessibility). Times come from the hardware (HID) idle counters only, so Focus's own
+/// synthetic events (the pane click fallback, posted at the session tap: the HID tap
 /// would reset these counters whatever the source state, bench 4) never count as user activity;
 /// clicks come from NSEvent monitors, only for their position (learning), which is passed on and
 /// not kept.
@@ -12,8 +12,8 @@ import QuartzCore
 /// resets the idle counters either. `CGWarpMouseCursorPosition` (our own cursor moves) generates
 /// no events either way (CGRemoteOperation.h), so it's unaffected by this choice.
 @MainActor public final class InputMonitor {
-    /// Marker Focus stamps on its own synthetic clicks (plan 4's pane click fallback,
-    /// `CGEventSourceSetUserData` on post) so this monitor never learns from itself (R10).
+    /// Marker Focus stamps on its own synthetic clicks (the pane click fallback,
+    /// `CGEventSourceSetUserData` on post) so this monitor never learns from itself.
     static let syntheticMarker: Int64 = 0x464F4355
 
     public var onClick: ((CGPoint, Double) -> Void)?
@@ -55,7 +55,7 @@ import QuartzCore
     deinit { monitors.forEach(NSEvent.removeMonitor) }
 
     private func click(_ e: NSEvent) {
-        // R10 (reconciliation): ignore clicks Focus posted itself (pane click fallback), or the
+        // Ignore clicks Focus posted itself (pane click fallback), or the
         // engine would "learn" from its own action and reset the mouse-quiet window it just used.
         guard let cgEvent = e.cgEvent, cgEvent.getIntegerValueField(.eventSourceUserData) != Self.syntheticMarker else { return }
         let t = CACurrentMediaTime()   // stamped here, same clock as GazeSample.time

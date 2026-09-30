@@ -1,6 +1,6 @@
 # Setups
 
-How Focus tells your places apart and keeps a separate calibration for each one (spec §7).
+How Focus tells your places apart and keeps a separate calibration for each one.
 
 ## What a setup is
 
@@ -98,8 +98,7 @@ less precisely when two places share the same screens and camera.
 - A Wi-Fi-only move can take up to 15 s to be recognised.
 - Identical screens and camera with no Wi-Fi name available (Location off, or both places share a network)
   stay ambiguous until you pick one by hand.
-- No export or import, and no per-setup engine settings (dwell, sensitivity, …) — those are global
-  (spec §12).
+- No export or import, and no per-setup engine settings (dwell, sensitivity, …) — those are global.
 - Carrying a calibration over to a new setup assumes you sit the same way relative to the screens it was
   measured for; if you don't, recalibrate that setup instead of relying on the carry-over.
 

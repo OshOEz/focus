@@ -66,7 +66,7 @@ func setupsTwoPlaces() -> (passed: Bool, detail: String) {
         : (false, problems.joined(separator: "; "))
 }
 
-/// Bench 2 (engine group), "setups-fingerprint" (deferred from plan 5 task 3 to the bench follow-up):
+/// Bench 2 (engine group), "setups-fingerprint":
 /// the fingerprint sees every active screen and passes the camera ID through. It never requests Location
 /// (bench code must never prompt) — when the grant isn't already there, reading the Wi-Fi name is
 /// impossible without one, so this reports a skip instead of a fail.

@@ -93,7 +93,7 @@ private func find(_ window: N, _ t: PaneTree<N> = tree(), maxNodes: Int = 3000) 
                    kids: Array(repeating: N(frame: r(0, 0, 1000, 600), kids: [leaf]), count: 100))
     _ = find(window, tree(c), maxNodes: 10)
     #expect(c.childrenCalls <= 10)
-    // #20: the budget must be spent before any AX round trip, not after — else an exhausted
+    // The budget must be spent before any AX round trip, not after — else an exhausted
     // budget still pays for one `frame` read per remaining sibling.
     #expect(c.frameCalls <= 10)
 }

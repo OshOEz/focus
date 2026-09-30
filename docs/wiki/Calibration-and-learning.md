@@ -10,7 +10,7 @@ engine side only — what runs the session, what it stores, and how the map impr
 [0,1] coordinates (y down):
 
 - **9-dot grid**: every combination of x ∈ {10%, 50%, 90%} and y ∈ {12%, 50%, 88%}, row by row
-  (`gridY` outer, `gridX` inner) — "3×3 grid".
+  (`gridY` outer, `gridX` inner).
 - **Shared-edge dots**: for every *other* display whose frame touches this one (within 2 pt, to
   absorb rounding), 3 more dots at 25/50/75% along the touching span, sitting 3% inside the shared
   edge (`edgeNear`/`edgeFar`). A display can pick up edge dots from more than one neighbour (a
@@ -20,9 +20,10 @@ Numbers: 9 dots on an untouched display, 12 with one shared edge, 15 with two �
 asserts these counts directly for a single screen, a side-by-side pair, and a laptop-below-two-monitors
 arrangement.
 
-Timing (`CalibrationRun`, `Sources/FocusCore/CalibrationRun.swift`, merged with plan 3b): each dot
+Timing (`CalibrationRun`, `Sources/FocusCore/CalibrationRun.swift`): each dot
 travels for `travel` = 0.6 s (eased in/out, smoothstep) then holds for `hold` = 1.0 s; only samples
 captured during the hold are collected. 9 dots ≈ 15 s, 12–15 dots (with edge dots) ≈ 20 s per
+screen: short enough to redo without friction.
 
 ## What is stored per display
 
@@ -73,13 +74,12 @@ position (display-local) as a new `CalibrationPoint`.
 
 `FocusSettings.learnFromClicks` (default true) turns this off entirely — `recordClick` returns
 `false` immediately when it's off, so no calibration is mutated, no error is recorded, and drift can
-never be detected on a display where learning is off ("adapts... turn it off in Settings
-anytime").
+never be detected on a display where learning is off. It can be turned off in Settings at any time.
 
 Recalibrating a display (`FocusEngine.setCalibration`) throws away everything learned:
 `learnedPoints` and `recentErrors` are reset before the new calibration is loaded — the map goes
 back to only the original session's points, and any accumulated drift-detection history for that
-display is gone too.
+display is gone too: learned points were measured against the old calibration.
 
 ## Drift
 
@@ -87,8 +87,7 @@ Each learned point's error is measured **before** it's learned (`DisplayCalibrat
 current map is asked to place the observed gaze, and the distance from that answer to the actual
 click position becomes one entry in `recentErrors` (capped at the last 30). `needsRecalibration` is
 true once there are at least 10 entries and their mean exceeds 15% of the unit-square diagonal
-(`errorThreshold = 0.15 * √2`) — "if focus starts missing on a screen, it tells you it's
-time to recalibrate", modeled as accumulated click error rather than a specific miss-count, since
+(`errorThreshold = 0.15 * √2`) — so the app can suggest recalibrating when focus starts missing on a screen, modeled as accumulated click error rather than a specific miss-count, since
 FocusCore has no visibility into what the user *meant* to click.
 
 `NotificationPolicy.drifted(_:notified:)` (`Sources/FocusCore/NotificationPolicy.swift`) turns the
@@ -101,7 +100,7 @@ enough new bad clicks accumulate).
 ## New display / layout changed
 
 `NotificationPolicy` is pure and stateless: the "already notified" set for new displays lives in
-`AppSettings.notifiedDisplays` (not in `FocusSettings` — R1/R6) and is passed in and read back by
+`AppSettings.notifiedDisplays` (not in `FocusSettings`: it is app state, not an engine knob) and is passed in and read back by
 the caller, never read from disk by `NotificationPolicy` itself.
 
 - `newDisplays(present:calibrated:notified:)`: every connected display key that has no calibration
@@ -121,8 +120,8 @@ a unique key keeps the plain, stable one, so normal setups are unaffected by thi
 ## Persistence
 
 `DisplayCalibration.init(from:)` requires only `pose` and `calibrationPoints` — the fields present
-since the plan-1 format. `dotPoses`, `learnedPoints` and `recentErrors` were added later and decode
+since the first format. `dotPoses`, `learnedPoints` and `recentErrors` were added later and decode
 to `[]` when absent, so a calibration file written by an older build loads without error (it just
 starts with an empty cloud and no learning history, same as decoding tolerance elsewhere in
-FocusCore — `FocusSettings`, `AppSettings`). `Tests/FocusCoreTests/Fixtures` holds the plan-1
+FocusCore — `FocusSettings`, `AppSettings`). `Tests/FocusCoreTests/Fixtures` holds first-format
 setup/settings JSON this tolerance is tested against (`PersistenceTests.swift`).

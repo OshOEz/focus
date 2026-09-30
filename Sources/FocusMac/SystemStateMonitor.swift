@@ -2,7 +2,7 @@ import AppKit
 import CoreGraphics
 
 /// Tracking (and the camera) stops while the Mac is locked, asleep, showing the screensaver or
-/// switched to another user. Several reasons can overlap; tracking resumes when the
+/// switched to another user: nobody is looking, so the camera has no reason to run. Several reasons can overlap; tracking resumes when the
 /// last one ends.
 @MainActor public final class SystemStateMonitor {
     public enum Reason: String, Sendable, CaseIterable { case locked, asleep, displaysAsleep, screensaver, sessionInactive }

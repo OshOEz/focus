@@ -67,7 +67,7 @@ final class AppController {
     @ObservationIgnored let input = InputMonitor()
     @ObservationIgnored let system = SystemStateMonitor()
     @ObservationIgnored private let settingsStore = SettingsStore(url: AppPaths.settings)
-    /// Owns every setup file and picks which one the engine uses (spec §7); the only thing that touches
+    /// Owns every setup file and picks which one the engine uses; the only thing that touches
     /// `engine.load`/`SetupStore.save` besides this file's own resolver construction in `start()`.
     /// Built in `start()`, not `init`: their closures capture `self`, which two-phase init disallows
     /// while any other stored property (declared below this one) is still unassigned.
@@ -321,7 +321,7 @@ final class AppController {
 
     /// Feeds the actuator's per-display "last window" history from every focus change, including the
     /// user's own clicks: the actuator only looks when it acts, and `windowToRestore` prefers that entry,
-    /// so without this a glance back would restore the window used before the user clicked another one.
+    /// so without this a look back would restore the window used before the user clicked another one.
     private func noteFocus(_ world: World) {
         guard let id = world.focusedWindowID, id != lastFocusedWindow,
               let w = world.windows.first(where: { $0.id == id }),
@@ -427,7 +427,7 @@ final class AppController {
     /// instead of this file storing them: see `calibrationEnded`.
     func startCalibration(_ keys: [String], completion: (([String: DisplayCalibration]) -> Void)? = nil) {
         guard canCalibrate else { completion?([:]); return }
-        // #32: every calibration must land in a setup. A menu/Settings call (no `completion`) with no
+        // Every calibration must land in a setup. A menu/Settings call (no `completion`) with no
         // active setup would otherwise finish and have nowhere to store its results — silently losing the
         // work. Delegate to the same path "New place detected"/Setup ▸ use: it creates a setup for this
         // place and calibrates whatever that setup is still missing (so `keys` is moot here: a brand-new

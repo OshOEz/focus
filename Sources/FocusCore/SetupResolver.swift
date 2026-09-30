@@ -1,6 +1,6 @@
 import Foundation
 
-/// What the app should tell the user after a resolve (spec §7).
+/// What the app should tell the user after a resolve.
 public enum SetupEvent: Equatable, Sendable {
     /// The engine now uses another setup because the place changed. `ambiguous`: several setups fit and the
     /// menu offers the others.
@@ -9,11 +9,11 @@ public enum SetupEvent: Equatable, Sendable {
     case newPlace
 }
 
-/// Picks the setup the engine uses and owns the setup files (spec §7, rulings in docs/wiki/Decisions.md).
+/// Picks the setup the engine uses and owns the setup files (rules in docs/wiki/Setups.md and docs/wiki/Decisions.md).
 ///
 /// In FocusCore rather than the app because these rules are the fragile part of setups and must run under
-/// `swift test` and the headless bench. `@MainActor`: `FocusEngine` is deliberately not Sendable (reconciliation
-/// R3) and lives on whatever isolation domain its owner runs on, so this resolver calls it from the main actor.
+/// `swift test` and the headless bench. `@MainActor`: `FocusEngine` is deliberately not Sendable
+/// and lives on whatever isolation domain its owner runs on, so this resolver calls it from the main actor.
 /// - a manual pick holds until the environment changes (`isEnvironmentChange`);
 /// - a Wi-Fi drop never counts as a move: the last SSID is kept while screens and camera stay the same;
 /// - among look-alike setups, the one in use stays in use;
@@ -59,7 +59,7 @@ public final class SetupResolver {
         return apply()
     }
 
-    /// Manual pick from the menu; holds until the environment changes (spec §7).
+    /// Manual pick from the menu; holds until the environment changes.
     public func choose(_ id: UUID) {
         guard let i = setups.firstIndex(where: { $0.id == id }) else { return }
         if let current {
@@ -118,7 +118,7 @@ public final class SetupResolver {
 
     /// Saves finished calibrations into `id`, the setup active when calibration *started*: a place change
     /// mid-calibration must not write one place's calibration into another's setup. Recalibrated screens lose
-    /// their learned clicks; the others keep theirs.
+    /// their learned clicks (learned points were measured against the old calibration); the others keep theirs.
     public func storeCalibrations(_ calibrations: [String: DisplayCalibration], into id: UUID) throws {
         guard let i = setups.firstIndex(where: { $0.id == id }) else { return }
         if id == activeID { setups[i].calibrations = engine.calibrations }

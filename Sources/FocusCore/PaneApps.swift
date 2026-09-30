@@ -1,7 +1,9 @@
 import Foundation
 
-/// Apps whose split panes we try to focus. Everything else gets window focus only.
-/// `com.jetbrains.` prefix. `com.spotify.xirp` is a Focus addition (spike: its panes accept AX focus).
+/// Apps whose split panes we try to focus. Everything else gets window focus only: pane focus
+/// needs per-app knowledge of how panes are exposed, so it stays limited to apps known to work.
+/// Exact bundle ids; JetBrains IDEs share the `com.jetbrains.` prefix. `com.spotify.xirp` was
+/// checked in docs/spikes/ax-panes.md (its panes accept AX focus).
 public enum PaneApps {
     public static let bundleIDs: Set<String> = [
         "com.googlecode.iterm2", "com.apple.Terminal", "com.mitchellh.ghostty",

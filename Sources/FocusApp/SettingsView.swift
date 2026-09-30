@@ -62,7 +62,7 @@ struct SettingsView: View {
                     SettingSlider(title: "Window and pane delay", help: "Resting time before a window or pane takes the keyboard.",
                                   info: "The time your eyes must settle on a different window or pane of the current display before it becomes active. Increase it if focus hops around while you read from pane to pane.",
                                   value: app.binding(\.engine.paneDwell), range: 0.2...1.5, step: 0.05, format: OnboardingView.ms)
-                    // R2/R11: this row is `syntheticClickFallback`, the pane click of plan 4.
+                    // This row is `syntheticClickFallback`, the pane click fallback (docs/wiki/Focusing-windows-and-panes.md).
                     SettingToggle(title: "Click a pane that ignores focus requests",
                                   help: "A last resort, only in supported terminals and editors.",
                                   info: "A few terminals and editors refuse to be focused by another app. For those only, Focus sends one click to the centre of the pane, well away from any divider. In an editor that click places the text caret too; disable the option to avoid that.",
@@ -73,7 +73,7 @@ struct SettingsView: View {
             Section("Typing") {
                 SettingToggle(title: "Hold focus while I type",
                               help: "Typing keeps the current window and pane; another display still takes over a second later.",
-                              info: "As long as you keep typing, Focus won't move between windows or panes on this display, so a glance at a neighbouring pane can't steal your input. Turning to a different display still switches roughly one second after you stop. Focus reads only the time of the last key press, never the key itself.",
+                              info: "As long as you keep typing, Focus won't move between windows or panes on this display, so a quick look at a neighbouring pane can't steal your input. Turning to a different display still switches roughly one second after you stop. Focus reads only the time of the last key press, never the key itself.",
                               isOn: app.binding(\.engine.waitWhileTyping))
                 SettingSlider(title: "Typing pause", help: "Quiet time after your last key before focus moves again.",
                               info: "The time same-display switching waits once you stop typing. Lengthen it if you stop to think between sentences; shorten it to let focus track your gaze again sooner.",

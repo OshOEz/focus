@@ -23,7 +23,8 @@ public struct CalibrationRun: Sendable {
         case cancelled
     }
 
-    /// ~20 s with the shared-edge dots, which matches their "about 20 s per screen".
+    /// Dot timing: ~0.6 s travel lets the eyes land, 1.0 s hold collects enough frames for a stable median.
+    /// 9 dots ≈ 15 s per screen, ~20 s with the shared-edge dots: short enough to redo without friction.
     public static let travel = 0.6
     public static let hold = 1.0
     /// Two screens whose median poses are closer than this (≈ 4.6° if only yaw differs) can't be told apart

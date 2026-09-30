@@ -15,7 +15,7 @@ public enum EngineStatus: Equatable, Sendable {
 
 /// Stops the engine from re-emitting an action that had no visible effect (a screen without a
 /// window, a raise the app refused, pane focus not available yet): once emitted, an action stays
-/// latched until the engine wants something else or the focused window changes (plan-1 follow-up).
+/// latched until the engine wants something else or the focused window changes.
 public struct ActionLatch: Sendable {
     private var last: FocusAction?
     private var focusedAtEmit: UInt32?
@@ -34,7 +34,7 @@ public struct ActionLatch: Sendable {
     public mutating func reset() { last = nil }
 }
 
-/// Turns gaze samples into focus actions for one setup (spec §5–8).
+/// Turns gaze samples into focus actions for one setup (docs/wiki/Decision-engine.md).
 /// Deliberately not Sendable: one isolation domain owns it (the app's MainActor controller).
 public final class FocusEngine {
     /// Changes apply on the next sample (the Settings window edits this live).
@@ -75,7 +75,7 @@ public final class FocusEngine {
     }
 
     /// Recalibrating a display replaces its calibration wholesale; what was learned from clicks
-    /// goes with it.
+    /// goes with it: learned points were measured against the old calibration and would pull the new one off.
     public func setCalibration(_ c: DisplayCalibration, for key: String) {
         var c = c
         c.learnedPoints = []
@@ -102,7 +102,7 @@ public final class FocusEngine {
 
         // The RBF returns raw unchanged far from calibration data, so a point just past a
         // display's edge (common near scrollbars/window borders) must be clamped back into it —
-        // otherwise it can resolve to a window on the neighboring screen (issue #6). The upper
+        // otherwise it can resolve to a window on the neighboring screen. The upper
         // bound is clamped strictly below 1 (not to it) because CGRect.contains excludes maxX
         // but includes minX, so an exact 1.0 would land on the adjacent display's own frame.
         let point = maps[key].map { map -> CGPoint in
@@ -121,7 +121,7 @@ public final class FocusEngine {
         if key != focusedDisplay {
             duration = settings.screenDwell
             if input.allowsScreenSwitch(at: now, settings) {
-                // land on the window looked at on that screen; otherwise the actuator
+                // Land on the window looked at on that screen; otherwise the actuator
                 // restores the last window used there.
                 let gazed = trusted ? point.flatMap {
                     TargetResolver.window(at: $0, windows: world.windows, current: nil, display: display.frame, settings: settings)

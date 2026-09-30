@@ -55,7 +55,7 @@ and from a 1 s timer (permission changes have no notification, so they are polle
   interruptions (another app took the camera) on its session queue; the handler only hops to the
   MainActor and never calls back into the tracker.
 - Every camera start reloads the engine's calibrations, which resets dwell, smoothing and the action
-  latch: after a pause or a lock, the first glance must be able to switch again.
+  latch: after a pause or a lock, the first look must be able to switch again.
 
 ### Persistence
 
@@ -72,8 +72,7 @@ and from a 1 s timer (permission changes have no notification, so they are polle
 `SetupResolver` (`Sources/FocusCore/SetupResolver.swift`) matches the live environment (screens, camera,
 Wi-Fi name) against saved setups and swaps the engine's calibration; `SetupController`
 (`Sources/FocusApp`) drives it from launch, display/camera changes and wake, and builds the Setup ▸ menu.
-Full rules and the menu shape are in [Setups](Setups.md); this replaces the single-"Default"-setup
-placeholder plan 3b shipped with.
+Full rules and the menu shape are in [Setups](Setups.md).
 
 ### Launch modes
 

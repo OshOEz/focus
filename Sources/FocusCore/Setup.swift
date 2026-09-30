@@ -31,7 +31,7 @@ public struct Fingerprint: Codable, Equatable, Sendable {
     }
 }
 
-/// A place you work from: its screens, camera, Wi-Fi and calibrations (spec §7).
+/// A place you work from: its screens, camera, Wi-Fi and calibrations.
 public struct Setup: Codable, Identifiable, Equatable, Sendable {
     public var id: UUID
     public var name: String

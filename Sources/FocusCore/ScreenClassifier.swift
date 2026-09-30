@@ -10,6 +10,7 @@ import Foundation
 /// passes `threshold` = 0.5 + (headTurn − 0.3) / 2, i.e. 0.5…0.7 for the 30…70 % setting.
 /// Never below the midpoint, so two screens can't both claim a pose (no ping-pong at the bezel,
 /// whatever the setting); going back to the screen just left needs `returnBand` more
+/// (hysteresis: a small drift back doesn't undo a switch). Details: docs/wiki/Decision-engine.md.
 public struct ScreenClassifier: Sendable {
     public static let returnBand = 0.05
     /// Narrowest facing-edge gap the switch fraction is computed over: 2.5 × minScreenSeparation
@@ -17,7 +18,7 @@ public struct ScreenClassifier: Sendable {
     /// flips twice on laptop-below, 2× twice at 900 pt, 2.5× never more than once; switch latency
     /// p50 stays 267 ms (laptop-below p95 267 → 333 ms, one frame, from the wider dead band).
     public static let minGap = 2.5 * CalibrationBuilder.minScreenSeparation
-    /// The off-screen distance calibrations saved without dots were used with (pre-plan-3 rule).
+    /// The off-screen distance calibrations saved without dots were used with (the rule before edge dots).
     public static let legacyCentroidDistance = 0.35
     public var centroids: [String: PoseFeature]
     public var clouds: [String: [PoseFeature]]
@@ -39,7 +40,7 @@ public struct ScreenClassifier: Sendable {
         // of screen A on bench desk laptop-below@1800pt (62 % at 900 pt) read as "away" measured
         // from the centroid. Not from the nearest dot either: points between dots lie up to 0.32 rad
         // from the nearest one at 700 pt, more than a phone 20° past the edge (0.25). From the box,
-        // no on-screen point is farther than 0.10 (sweep: docs/wiki/Decision-engine.md §3).
+        // no on-screen point is farther than 0.10 (sweep: docs/wiki/Decision-engine.md, Screen boundary).
         guard let nearest = centroids.min(by: { $0.value.distance(to: pose) < $1.value.distance(to: pose) }),
               centroids.contains(where: { key, c in
                   let dots = clouds[key] ?? []
@@ -71,7 +72,7 @@ public struct ScreenClassifier: Sendable {
         }
         var edgeA = (clouds[a] ?? []).map(project).max() ?? 0
         var edgeB = (clouds[b] ?? []).map(project).min() ?? length
-        // Issue #17: the hysteresis inside a gap is a fixed share of its width, so a gap only a few
+        // The hysteresis inside a gap is a fixed share of its width, so a gap only a few
         // times the pose jitter at rest (σ ≈ 0.01 rad) lets noise alone cross it (edge dots 3 % inside
         // two screens are only ~0.04-0.06 rad apart at 1-2 m). Narrow gaps are therefore widened
         // around their midpoint to `minGap`: the boundary stays at the seam, only the dead band grows.

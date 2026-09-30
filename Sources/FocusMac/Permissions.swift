@@ -25,7 +25,7 @@ public enum Permissions {
     /// Accessibility has no "not determined": an untrusted app reads as denied.
     public static var accessibility: Status { AXIsProcessTrusted() ? .granted : .denied }
 
-    /// Only Focus's Wi-Fi setups need it (SSID); optional (plan 5).
+    /// Only Focus's Wi-Fi setups need it (SSID); optional.
     public static var location: Status {
         switch CLLocationManager().authorizationStatus {
         case .notDetermined: .notDetermined
@@ -34,7 +34,7 @@ public enum Permissions {
         }
     }
 
-    /// Posting synthetic events (plan 4's click fallback, bench 4). Granted with Accessibility in practice.
+    /// Posting synthetic events (the pane click fallback, bench 4). Granted with Accessibility in practice.
     public static var eventPosting: Status { CGPreflightPostEventAccess() ? .granted : .denied }
 
     public static func requestCamera() async -> Bool { await AVCaptureDevice.requestAccess(for: .video) }

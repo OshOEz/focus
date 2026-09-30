@@ -58,7 +58,7 @@ private func samples(at p: CGPoint, yaw: Double, count: Int = 10) -> [GazeSample
     #expect(!cal.needsRecalibration)
 }
 
-// Issue #4: a single non-finite point must not silently disable the RBF map.
+// A single non-finite point must not silently disable the RBF map.
 @Test func learnIgnoresNonFinitePoint() throws {
     var cal = try #require(CalibrationBuilder.build(
         targets: targets.map { ($0, samples(at: $0, yaw: 0)) }, minConfidence: 0.5))

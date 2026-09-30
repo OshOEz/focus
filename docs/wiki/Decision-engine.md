@@ -34,7 +34,7 @@ GazeSample (GazeKit, host clock)
  ActionLatch.admit ──already fired for this state──► nil
       │
       ▼
- FocusAction (.display / .window / .pane)  ──► FocusActuator (plan 3b)
+ FocusAction (.display / .window / .pane)  ──► FocusActuator
 ```
 
 Every stage is pure and takes `now` as a parameter (`GazeSample.time`, `InputActivity`'s
@@ -138,7 +138,7 @@ maps the "Head turn needed" setting (0.3…0.7) onto 0.5…0.7. The floor is 0.5
 gap — and it's a hard floor: whatever the setting, N is never granted the pose before the pose has
 crossed into its half of the gap. Two screens can therefore never both claim the same pose, and
 there is no ping-pong right at the bezel no matter how low "head turn needed" is set. Going back to
-"going back needs a slightly bigger turn" — so a pose sitting exactly on the boundary doesn't flap
+the screen just left needs `threshold + ScreenClassifier.returnBand` (0.05 more) — going back needs a slightly bigger turn — so a pose sitting exactly on the boundary doesn't flap
 between two screens as it drifts by a pixel.
 
 Why the *facing* edge of the cloud and not the centroid: the centroid is the average pose looking
@@ -179,22 +179,23 @@ at 1800 pt; a full-floor fallback to centroids → 0 there but 2-3 flips at 1000
 ## 4. Guards
 
 `InputActivity` (`Sources/FocusCore/Settings.swift`) tracks only the *time* of the last key and
-mouse event — never their content.
+mouse event — never their content (privacy).
 
-| Guard | Value | Setting? | Source |
+| Guard | Value | Setting? | Why |
 |---|---|---|---|
-| Screen dwell | 300 ms default | `FocusSettings.screenDwell`, 0.1–1 s | |
-| Screens after typing | 1 s | fixed, `FocusSettings.screenTypingPause` | (b), "inferred" |
-| Panes/windows after typing | 3 s default | `FocusSettings.typingPause`, 1–10 s | (a) |
-| Wait while typing | on by default, can turn off | `FocusSettings.waitWhileTyping` | |
-| Mouse guard | 1.5 s fixed | `FocusSettings.mousePause` (no setting exposed) | |
-| Off-screen margin | 0.2 past the dots' box | `FocusSettings.offScreenMargin` (no setting exposed) | ; sweep in §3 |
+| Screen dwell | 300 ms default | `FocusSettings.screenDwell`, 0.1–1 s | long enough to ignore a passing look, short enough to feel instant |
+| Pane/window dwell | 300 ms default | `FocusSettings.paneDwell`, 0.2–1.5 s | same trade-off, for reading across panes |
+| Screens after typing | 1 s | fixed, `FocusSettings.screenTypingPause` | turning to another screen is deliberate, even mid-sentence |
+| Panes/windows after typing | 3 s default | `FocusSettings.typingPause`, 1–10 s | reading a neighbour pane must not steal keystrokes |
+| Wait while typing | on by default, can turn off | `FocusSettings.waitWhileTyping` | some people prefer focus to follow even while typing |
+| Mouse guard | 1.5 s fixed | `FocusSettings.mousePause` (no setting exposed) | a drag or a long scroll must never be undercut |
+| Off-screen margin | 0.2 past the dots' box | `FocusSettings.offScreenMargin` (no setting exposed) | a phone or lap reads as away; sweep in section 3 above |
 
 `allowsScreenSwitch(at:_:)` only checks the mouse guard and (if `waitWhileTyping`) the fixed
 1-second screen-typing pause — turning to another screen still moves focus "after about a second"
 even mid-sentence. `allowsSameScreen(at:_:)` checks the mouse guard and the full, user-set
 `typingPause` — reading another pane on the same screen never steals keystrokes until that pause
-elapses. `InputActivity.isQuiet` does not exist; these two named guards are the whole API (R4).
+elapses. `InputActivity.isQuiet` does not exist; these two named guards are the whole API.
 
 ## 5. What a screen switch focuses
 
@@ -205,7 +206,7 @@ On landing on a new screen (`FocusEngine.decide`, the `key != focusedDisplay` br
    (`TargetResolver.window(at:...)`), focus **that** window.
 2. Otherwise `TargetResolver.windowToRestore(on:windows:last:)` returns the last window used on
    that screen if it's still there, else the topmost window at least `minSize` (200×150 default) —
-   never a synthetic click. This is 3b's `FocusActuator`'s job; FocusCore only
+   never a synthetic click (it could land on a button or link). This is `FocusActuator`'s job; FocusCore only
    exposes the pure function.
 3. If neither yields a window, the action is `.display(key)` — the pointer/Space follows, no window
    focus change.

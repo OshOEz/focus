@@ -20,8 +20,8 @@ import FocusCore
     #expect(!actuator.perform(.pane(window: 1, frame: .zero), world: world))   // not a pane of the world
 }
 
-/// Audit #19: every layer counts (a floating panel above the pane blocks the click); only Focus's
-/// own windows, the target, invisible (alpha 0) windows and unreadable entries are left out (R11).
+/// Every layer counts (a floating panel above the pane blocks the click); only Focus's
+/// own windows, the target, invisible (alpha 0) windows and unreadable entries are left out.
 @Test func occludersKeepEveryLayerButOursAndTheTarget() {
     func w(_ id: Int, pid: Int32, layer: Int, x: Int, alpha: Double? = nil) -> [String: Any] {
         // NSNumber like CGWindowListCopyWindowInfo's values (a Swift Int in Any would not cast to pid_t).
@@ -72,10 +72,10 @@ import FocusCore
     #expect(FocusActuator.occluders(in: [w(2, bounds: display)], excludingPID: 7, window: 5, displayFrames: [display]).isEmpty)
 }
 
-/// Audit #27: Launchpad, Mission Control and any other full-display Dock window block the click —
+/// Launchpad, Mission Control and any other full-display Dock window block the click —
 /// only the permanent window's own layer (20, bench 4 2026-09-30) is dropped. Same bounds, different
 /// layer (27 here, arbitrary) must still come back as an occluder, or an overlay the user opened on
-/// purpose could eat a click meant for the pane underneath (R11).
+/// purpose could eat a click meant for the pane underneath.
 @Test func fullDisplayDockWindowAtAnyOtherLayerStaysAnOccluder() {
     func w(_ id: Int, layer: Int, bounds: CGRect) -> [String: Any] {
         [kCGWindowNumber as String: id as NSNumber, kCGWindowOwnerPID as String: 9 as NSNumber,

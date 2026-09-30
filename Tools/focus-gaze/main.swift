@@ -82,7 +82,7 @@ func run() async {
             guard poses.count >= 10, let c = PoseFeature.median(of: poses) else {
                 fail("Pas assez d'images avec un visage pour l'écran \(i + 1) (\(poses.count)). Mets-toi face à la caméra et recommence.")
             }
-            // ponytail: identical monitors sharing a non-zero serial collide on key (plan 3 fixes the key).
+            // ponytail: identical monitors sharing a non-zero serial collide on key (the app appends the origin, see Setup.swift).
             centroids[d.key] = c
             names[d.key] = "écran \(i + 1)"
             print("  ok : yaw \(deg(c.yaw)), pitch \(deg(c.pitch)) (\(poses.count) images)")

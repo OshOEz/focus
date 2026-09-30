@@ -10,7 +10,7 @@ func median(_ xs: [Double]) -> Double {
     return n % 2 == 1 ? s[n / 2] : (s[n / 2 - 1] + s[n / 2]) / 2
 }
 
-/// Everything learned about one display in one setup (spec §5).
+/// Everything learned about one display in one setup.
 public struct DisplayCalibration: Codable, Sendable, Equatable {
     public static let maxLearned = 200
     public static let errorWindow = 30
@@ -20,7 +20,7 @@ public struct DisplayCalibration: Codable, Sendable, Equatable {
     public var pose: PoseFeature
     public var calibrationPoints: [CalibrationPoint]
     /// Median head pose at each calibration dot: the "cloud" whose facing edge places the
-    /// screen boundary (ScreenClassifier). Empty for calibrations saved before plan 3.
+    /// screen boundary (ScreenClassifier). Empty for calibrations saved before edge dots existed.
     public var dotPoses: [PoseFeature] = []
     public var learnedPoints: [CalibrationPoint] = []
     public var recentErrors: [Double] = []
@@ -40,7 +40,7 @@ public struct DisplayCalibration: Codable, Sendable, Equatable {
 
     /// Adds a click-derived sample; the error is measured against the model *before* learning it.
     /// Non-finite points (NaN/inf input or target) are ignored: they'd poison the RBF solve and
-    /// silently disable the map (issue #4).
+    /// silently disable the map.
     public mutating func learn(_ p: CalibrationPoint) {
         guard p.input.x.isFinite, p.input.y.isFinite, p.target.x.isFinite, p.target.y.isFinite else { return }
         if let m = map {
@@ -55,7 +55,7 @@ public struct DisplayCalibration: Codable, Sendable, Equatable {
 
 extension DisplayCalibration {
     /// Pose and dots are required (without them the calibration is useless and the file should be
-    /// quarantined); everything added since plan 1 is optional so older setups keep loading.
+    /// quarantined); everything added since the first format is optional so older setups keep loading.
     public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(pose: try c.decode(PoseFeature.self, forKey: .pose),

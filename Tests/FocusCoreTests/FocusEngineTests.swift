@@ -120,7 +120,7 @@ private func sample(_ t: Double, yaw: Double, raw: CGPoint = CGPoint(x: 0.25, y:
 }
 
 @Test func gazeSlightlyPastDisplayEdgeNeverFocusesNeighborWindow() {
-    // issue #6: a raw point just past [0,1] (identity map returns it unchanged) must stay
+    // A raw point just past [0,1] (identity map returns it unchanged) must stay
     // clamped to the chosen display, never resolve to a window on the neighboring screen.
     let e = engine()
     let raw = CGPoint(x: 1.01, y: 0.5)   // unclamped global would be (1010, 400): inside window 3 (on R)
@@ -211,7 +211,7 @@ private func sample(_ t: Double, yaw: Double, raw: CGPoint = CGPoint(x: 0.25, y:
     for i in 33..<40 {
         if let a = e.decide(sample(Double(i) / 10, yaw: 0.3), world: noWindowOnR, input: quiet) { actions.append(a) }
     }
-    #expect(actions == [.display("R"), .display("R")])      // a new glance may try again
+    #expect(actions == [.display("R"), .display("R")])      // a new look may try again
 }
 
 @Test func latchReleasesWhenFocusMoves() {

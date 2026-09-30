@@ -3,7 +3,7 @@ import ApplicationServices
 import FocusCore
 import QuartzCore
 
-/// Performs the engine's actions through Accessibility: never a click for windows.
+/// Performs the engine's actions through Accessibility: never a click for windows (a click can land on a button or link).
 @MainActor public final class FocusActuator {
     /// Settings "move pointer": bring the pointer onto the focused window when focus changes screen,
     /// so Spaces, Mission Control and new windows follow.
@@ -70,7 +70,7 @@ import QuartzCore
         return true
     }
 
-    /// Pane focus, Accessibility first; a click at the pane centre only when the app
+    /// Pane focus: Accessibility first; a click at the pane centre only when the app
     /// ignores AX focus, only in allow-listed apps, only when `PaneClick` finds a safe point.
     /// Success is read back from the app (the focused element's ancestors), never assumed: some
     /// terminals accept `AXFocused` without moving keyboard focus.
@@ -86,7 +86,7 @@ import QuartzCore
         var settings = FocusSettings()
         settings.paneBoundaryMargin = paneBoundaryMargin
         // Occluders are read right before posting: a panel that appeared since the World snapshot
-        // must still block the click (audit #19). Nil = the target closed or left the screen:
+        // must still block the click. Nil = the target closed or left the screen:
         // fail closed rather than click whatever is there now.
         guard let above = CGWindowListCopyWindowInfo([.optionOnScreenAboveWindow, .excludeDesktopElements], window)
                 as? [[String: Any]],
@@ -104,7 +104,7 @@ import QuartzCore
         return ok
     }
 
-    /// Frames that may cover the pane (R11): every layer (floating panels, PiP, overlays), minus
+    /// Frames that may cover the pane: every layer (floating panels, PiP, overlays), minus
     /// Focus's own windows, the target and alpha-0 windows (invisible full-screen overlays of other
     /// tools would otherwise block every click). Callers pass windows above the target only —
     /// anything below it cannot receive the click, and counting it would refuse most clicks.
@@ -114,7 +114,7 @@ import QuartzCore
     /// recognised — by its bounds matching a display's frame exactly AND its layer being exactly 20,
     /// the value observed for the permanent window on this machine — and dropped; `dockStrips` (its
     /// real bar, see `dockStrip`) count in its place when it is above. Launchpad and Mission Control
-    /// also span a whole display and are owned by the Dock, but sit at a different layer (audit #27):
+    /// also span a whole display and are owned by the Dock, but sit at a different layer:
     /// the layer check keeps them as occluders, so a pane click never lands on them.
     public nonisolated static func occluders(in raw: [[String: Any]], excludingPID pid: pid_t, window: UInt32,
                                              dockStrips: [CGRect] = [], displayFrames: [CGRect] = []) -> [CGRect] {
@@ -161,7 +161,7 @@ import QuartzCore
         return NSScreen.screens.map { CGRect(x: $0.frame.minX, y: h - $0.frame.maxY, width: $0.frame.width, height: $0.frame.height) }
     }
 
-    /// The pane-click fallback's posting (R10, bench 4), shared verbatim with focus-bench so its
+    /// The pane-click fallback's posting (bench 4), shared verbatim with focus-bench so its
     /// probe matches exactly what ships: a `.privateState` source keeps our synthetic flags out of
     /// the user's modifier state, the marker lets InputMonitor's NSEvent click monitors drop it, and
     /// the session tap (not HID) keeps the click off the .hidSystemState idle counters InputMonitor

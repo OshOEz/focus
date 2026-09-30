@@ -16,9 +16,10 @@ import Testing
     #expect(!PaneApps.isAllowed(""))
 }
 
-@Test func allowsEveryListedAppPlusXirp() {
+@Test func allowsEverySupportedApp() {
     #expect(PaneApps.isAllowed("com.microsoft.VSCodeInsiders"))
     #expect(PaneApps.isAllowed("com.spotify.xirp"))
+    // 16 terminals and editors + Xirp.
     #expect(PaneApps.bundleIDs.count == 17)
 }
 

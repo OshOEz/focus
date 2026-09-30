@@ -9,11 +9,11 @@ public enum PaneClick {
     /// Always the pane centre, and only when (a) the centre is farther than `paneBoundaryMargin`
     /// from every other pane — a click near a divider can grab it or land in the neighbour —
     /// (b) `window` is the topmost window at that point among `world.windows`, and (c) the centre
-    /// is inside none of `occluders`. "click in the middle of the pane", never in
-    /// other apps.
+    /// is inside none of `occluders`. Clicking the middle of the pane, never another app,
+    /// is the only click that can't do something the user didn't ask for.
     ///
     /// (b) alone misses floating panels and PiP windows, invisible to `world.windows`'s layer-0
-    /// snapshot; `occluders` (issue #19, reconciliation R11 — docs/wiki/Focusing-windows-and-panes.md)
+    /// snapshot; `occluders` (docs/wiki/Focusing-windows-and-panes.md)
     /// is the layer-agnostic fix: the caller reads every on-screen window above `window` right before
     /// posting. Windows below `window` can't take the click; the default `[]` is for tests only.
     public static func point(for pane: CGRect, window: UInt32, world: World,

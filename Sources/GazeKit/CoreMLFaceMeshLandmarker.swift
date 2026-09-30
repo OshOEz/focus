@@ -10,7 +10,7 @@ import Vision
 /// in the same full-image normalized space MediaPipe produced, so the existing
 /// `HomographyEyePatchExtractor` works unchanged.
 ///
-/// Convention validated in `Tools/Conversion/facemesh_parity.py` (2026-07-01):
+/// Convention validated against the source TFLite model's output (2026-07-01):
 ///   • input  `input_1`  : 1×192×192×3 Float32, RGB, NHWC, ÷255 → [0,1]
 ///   • output `conv2d_20`: 468×(x,y,z) interleaved, x,y in crop-pixel space 0–192
 ///   • output `conv2d_30`: face-presence logit (apply sigmoid)

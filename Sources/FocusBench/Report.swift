@@ -25,7 +25,7 @@ extension BenchResult {
     /// Group labels by number, so the report orders and names groups the same whoever writes the row.
     static let groupNames = [0: "0 no-prompt lint", 1: "1 unit", 2: "2 engine", 3: "3 vision", 4: "4 live AX", 5: "5 app smoke"]
 
-    /// Plan 3b's shape: `detail` is kept on pass too (it carries the measured value).
+    /// `detail` is kept on pass too (it carries the measured value).
     init(group: Int, name: String, passed: Bool, detail: String) {
         self.init(group: Self.groupNames[group] ?? "\(group)", name: name, status: passed ? .pass : .fail, reason: detail)
     }
@@ -37,7 +37,7 @@ extension BenchResult {
 enum Report {
     /// Markdown report of every group; returns the number of failures (the script's exit code).
     static func write(out: String, unitLog: String, unitStatus: Int32, lint: String, app: String,
-                      copyStatus: Int32 = 1, copyLog: String = "", jsons: [String]) -> Int32 {
+                      jsons: [String]) -> Int32 {
         let g = BenchResult.groupNames
         var results: [BenchResult] = []
         // A missing lint file means the grep never ran: that proves nothing, so it fails too.
@@ -49,8 +49,6 @@ enum Report {
             results.append(.check(g[0]!, "no permission request in tests/benches", false, rule: "no match",
                                   reason: "lint not run (\(lint) missing)"))
         }
-        let copy = ((try? String(contentsOfFile: copyLog, encoding: .utf8)) ?? "").split(separator: "\n")
-                              reason: copy.prefix(5).joined(separator: "; ")))
         let log = (try? String(contentsOfFile: unitLog, encoding: .utf8)) ?? ""
         let counts = log.matches(of: /Test run with (\d+) tests/).compactMap { Double($0.1) }
         results.append(.check(g[1]!, "swift test", unitStatus == 0, rule: "exit 0",

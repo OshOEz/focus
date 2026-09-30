@@ -5,7 +5,7 @@ import FocusMac
 import QuartzCore
 
 /// Buffers a process's stdout lines as they arrive off the main thread (a `Pipe`'s
-/// `readabilityHandler` runs on a background queue), so a bench row can look for one — Task 8's
+/// `readabilityHandler` runs on a background queue), so a bench row can look for one — the fixture's
 /// `pane-focused <i>` / `pane-clicked <i>` protocol lines — without a dedicated async reader per check.
 private final class LineLog: @unchecked Sendable {
     private let lock = NSLock()
@@ -93,7 +93,7 @@ private final class LineLog: @unchecked Sendable {
 }
 
 /// FocusMac wiring around one `PaneFixture`: providers, actuator, and the fixed window id of the
-/// split window (always `focus-fixture`'s second window, task 8).
+/// split window (always `focus-fixture`'s second window).
 @MainActor private final class PaneSession {
     let fixture: PaneFixture
     let wp = WindowProvider()
@@ -148,10 +148,10 @@ private final class LineLog: @unchecked Sendable {
     return layer.map { "\(name) layer \($0)" } ?? name
 }
 
-/// Group 4's pane rows (task 9): AX-first pane focus, the click fallback behind
+/// Group 4's pane rows: AX-first pane focus, the click fallback behind
 /// `syntheticClickFallback`, its safety guards (disabled setting, covered pane), and the Electron-style
 /// late AX tree (`PaneProvider`'s empty-tree retry). Each row group launches its own `focus-fixture`
-/// with the flags task 8 added: `--refuse-ax-focus` forces the click path, `--late-ax` exercises the
+/// with its pane flags: `--refuse-ax-focus` forces the click path, `--late-ax` exercises the
 /// retry. Never clicks to set up a starting state — only to make the state the row is checking.
 @MainActor func paneBenches() -> [BenchResult] {
     let group = BenchResult.groupNames[4]!
@@ -329,7 +329,7 @@ private final class LineLog: @unchecked Sendable {
     // If panes[1] is already focused (a prior row), an AX focus request on it trivially succeeds
     // before `focusPane` ever reaches the click fallback the cover is meant to block — move focus
     // away first with a plain click, so this row exercises the occluder guard, not a no-op. That
-    // setup click is itself an unguarded post (issue #30): pane 0's centre can be covered by the
+    // setup click is itself an unguarded post: pane 0's centre can be covered by the
     // exact same real-desktop clutter P4.4/P4.5 already check for — often the very thing P4.5 just
     // found covered, since a covered P4.5 leaves pane 1 still focused — so it needs the same guard,
     // skipping instead of posting a click into whatever's there.

@@ -1,5 +1,6 @@
 import Foundation
 
+/// When the app should tell the user something. Pure: the caller keeps the
 /// "already notified" sets (`AppSettings.notifiedDisplays` for new displays; per calibration for
 /// drift, cleared when that display is recalibrated).
 public enum NotificationPolicy {

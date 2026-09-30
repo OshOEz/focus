@@ -52,7 +52,7 @@ For a target window, `FocusActuator` does this, in AeroSpace/Rectangle order:
 
 AX comes first because, since macOS 14, `activate` called from a background agent is "cooperative"
 and the system may ignore it. For trusted AX clients, the frontmost attribute is honoured. Windows are
-never clicked.
+never clicked: a click can land on a button or link.
 
 ### 5. What a screen switch focuses
 
@@ -75,7 +75,7 @@ A window's screen is the display that contains the window's centre.
 
 ### 7. Cursor warp
 
-`moveCursor` comes from `AppSettings.moveCursor` (not `FocusSettings`, see reconciliation R1). When it
+`moveCursor` comes from `AppSettings.moveCursor` (not `FocusSettings`: it is an app preference). When it
 is on, the pointer moves to the centre of the focused window, but only when focus changes screen. On
 `.display`, that is always. On `.window`, it happens only if the target is on a different screen than
 the currently focused window. On an empty screen, the pointer goes to the screen's centre. The point is
@@ -106,18 +106,18 @@ action every frame.
 Code: `Sources/FocusCore/PaneFinder.swift`, `PaneClick.swift`; `Sources/FocusMac/PaneProvider.swift`,
 `FocusActuator.swift` (the `.pane` branch); wiring in `Sources/FocusApp/AppController.swift`.
 
-Occluders (R11): every window above the target, any layer, other processes, alpha > 0. **R11 note — the
+Occluders: every window above the target, any layer, other processes, alpha > 0. **Note — the
 Dock.** The Dock owns an always-on, click-through window spanning the whole display at layer 20 with
 alpha 1; counted as is, it covers every point and no pane click is ever posted (bench 4, 2026-09-30).
 So that one window (recognised by bounds equal to a display frame **and** layer 20; Launchpad and
-Mission Control, which also have the size of a display, sit at a different layer and stay occluders,
-audit #27) is dropped and replaced, when it is above the target, by the Dock's real strip per screen:
+Mission Control, which also have the size of a display, sit at a different layer and stay occluders)
+is dropped and replaced, when it is above the target, by the Dock's real strip per screen:
 the side of `NSScreen.frame` that `visibleFrame` gives up (bottom, left or right; the top gap is
 the menu bar), flipped to global CG coordinates (`FocusActuator.dockStrip`). Auto-hide = no strip. The
 strip spans the whole side, not the bar's exact length: it errs on "blocked".
 
 The click must not look like the user. It comes from a `.privateState` source, carries the marker
-`0x464F4355` (InputMonitor's click monitors drop it, R10), and is posted at **`.cgSessionEventTap`**.
+`0x464F4355` (InputMonitor's click monitors drop it), and is posted at **`.cgSessionEventTap`**.
 Not the HID tap: an event posted at `.cghidEventTap` enters the `.hidSystemState` idle counters
 whatever its source state, so the click would reset the mouse-quiet window InputMonitor reads
 (bench 4, 2026-09-30: `leftMouseDown` idle 97.9 s → 0.16 s at the HID tap; at the session tap the click
@@ -131,6 +131,7 @@ VSCodium, Zed, Sublime Text, Xcode, Android Studio — plus every `com.jetbrains
 (`com.spotify.xirp`, a Focus addition; its panes were spiked to accept AX focus). The list lives in
 `PaneApps`. Everything else — browsers, chat apps, document editors — gets whole-window focus only:
 their "panes" are DOM regions or custom-drawn splits with no stable Accessibility container to find or
+verify focus through, so Focus doesn't try.
 
 ### 2. How panes are found
 
@@ -170,9 +171,8 @@ as user input (no mouse pause, nothing learned from it).
 ### 4. Settings
 
 `FocusSettings.paneDwell` — pane delay, default 300 ms, range 200-1500 ms.
-`FocusSettings.syntheticClickFallback` — the click fallback toggle, default on (shared with the
-window-focus click setting, see reconciliation R2). Both reach `FocusActuator`/`FocusEngine` through
-`AppController.update(_:)`; the Settings-window rows are plan 3b Task 8.
+`FocusSettings.syntheticClickFallback` — the click fallback toggle, default on (one setting, so two names can't drift apart). Both reach `FocusActuator`/`FocusEngine` through
+`AppController.update(_:)`.
 
 ### 5. Known limits
 

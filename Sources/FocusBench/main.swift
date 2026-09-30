@@ -2,7 +2,7 @@ import AppKit
 import Foundation
 
 // focus-bench <group> [--json FILE] [--fixtures DIR]      group: a key of `groups` below
-// focus-bench report --out MD --unit-log LOG --unit-status N --lint FILE --copy N --copy-log FILE --app STATUS JSON...
+// focus-bench report --out MD --unit-log LOG --unit-status N --lint FILE --app STATUS JSON...
 // Unattended: never requests a permission; a check that needs one reports "skip" with the reason.
 
 let args = Array(CommandLine.arguments.dropFirst())
@@ -37,8 +37,7 @@ if let name = args.first, let group = groups[name] {
     let jsons = args.dropFirst().filter { $0.hasSuffix(".json") }
     exit(Report.write(out: option("--out") ?? "build/bench/report.md", unitLog: option("--unit-log") ?? "",
                       unitStatus: Int32(option("--unit-status") ?? "1") ?? 1, lint: option("--lint") ?? "",
-                      app: option("--app") ?? "skip:not run", copyStatus: Int32(option("--copy") ?? "1") ?? 1,
-                      copyLog: option("--copy-log") ?? "", jsons: Array(jsons)))
+                      app: option("--app") ?? "skip:not run", jsons: Array(jsons)))
 } else {
     FileHandle.standardError.write(Data("usage: focus-bench \(groups.keys.sorted().joined(separator: "|"))|report …\n".utf8))
     exit(64)

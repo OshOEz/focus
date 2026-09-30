@@ -7,7 +7,7 @@ public struct HotKeySpec: Codable, Equatable, Sendable {
     public static let shift: UInt32 = 0x0200
     public static let option: UInt32 = 0x0800
     public static let control: UInt32 = 0x1000
-    /// ⇧⌘G (kVK_ANSI_G = 5), the default.
+    /// ⇧⌘G (kVK_ANSI_G = 5): G for gaze, and Shift-Command keeps it clear of common app shortcuts.
     public static let `default` = HotKeySpec(keyCode: 5, modifiers: shift | command, key: "G")
 
     public var keyCode: UInt32
@@ -52,7 +52,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
     }
 
     /// Tolerant on purpose: a missing or mistyped key keeps its default, so a file written by an older or
-    /// newer build never resets every setting (plan-1 follow-up on persistence).
+    /// newer build never resets every setting.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         func value<T: Decodable>(_ key: CodingKeys, _ fallback: T) -> T {

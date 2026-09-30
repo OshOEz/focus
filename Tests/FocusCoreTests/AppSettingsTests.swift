@@ -13,7 +13,7 @@ import Testing
         try Data(text.utf8).write(to: url)
     }
 
-    @Test func defaultsMatchTheSpec() {
+    @Test func defaultsMatchDocumentedValues() {
         let s = AppSettings()
         #expect(!s.showGazeDot)
         #expect(s.launchAtLogin && s.moveCursor && !s.onboardingCompleted && !s.loginItemDefaultApplied)

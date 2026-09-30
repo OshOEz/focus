@@ -98,7 +98,7 @@ private func classifier(headTurn: Double = 0.5) -> ScreenClassifier {
     #expect(abs(classifier(headTurn: 1).threshold - 0.7) < 1e-12)
 }
 
-// Issue #17: facing-edge dots 0.001 rad apart (calibration-dot noise, not a real gap) must not
+// Facing-edge dots 0.001 rad apart (calibration-dot noise, not a real gap) must not
 // turn a tiny denominator into a hair-trigger switch. Below the pose-jitter floor, gapFraction
 // falls back to centroid-to-centroid geometry, same as a display with no dots at all.
 @Test func tinyCloudGapFallsBackAndNeverPingPongs() {

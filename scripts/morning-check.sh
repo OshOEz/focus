@@ -28,6 +28,6 @@ if [ -d build/Focus.app ]; then
   open build/Focus.app
   ask "onboarding: permission page updates by itself; 9-dot calibration; Try it map follows the head"
 else
-  echo "- app onboarding: skipped (build/Focus.app not built yet, plan 3b)" >> "$OUT"
+  echo "- app onboarding: skipped (build/Focus.app not built)" >> "$OUT"
 fi
 echo "Also run the manual list in TESTING.md. Results: $OUT"

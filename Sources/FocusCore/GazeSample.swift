@@ -21,7 +21,7 @@ public struct PoseFeature: Codable, Sendable, Equatable {
     }
 }
 
-/// One camera frame's output from GazeKit (plan 2).
+/// One camera frame's output from GazeKit.
 public struct GazeSample: Sendable {
     public var time: Double        // seconds, host clock (CACurrentMediaTime base)
     public var raw: CGPoint        // BlazeGaze point before calibration
