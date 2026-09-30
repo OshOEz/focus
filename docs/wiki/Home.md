@@ -32,7 +32,7 @@ catch up is gone; this wiki is the engineering reference for how, page by page.
 ## Build
 
 ```bash
-scripts/build-app.sh   # builds build/Focus.app, ad-hoc signed
+scripts/build-app.sh   # builds build/Focus.app (run scripts/make-signing-cert.sh once first)
 open build/Focus.app   # the Setup Guide walks you through permissions and calibration
 ```
 

@@ -76,7 +76,7 @@ ship inside the app).
 
 ## Ad-hoc signing ceiling
 
-`scripts/build-app.sh` signs the app ad hoc. The signature changes on every build, so macOS may treat
-a rebuilt Focus as a new app and reset its Camera and Accessibility grants. Re-run the Setup Guide
-(menu bar → "Setup Guide…") to grant them again. A Developer ID signature would make grants survive
-rebuilds.
+`scripts/build-app.sh` signs the app with a local self-signed identity (create it once with
+`scripts/make-signing-cert.sh`), so Camera and Accessibility grants survive rebuilds. Without it the
+signature is ad hoc and changes on every build: macOS then treats a rebuilt Focus as a new app and
+silently drops both grants (see Troubleshooting).

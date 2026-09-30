@@ -87,3 +87,10 @@ Prints one JSON object and exits 0 when healthy. It opens no window, no camera a
 
 A `settings.json.broken` (or `setups/<id>.json.broken`) means that file couldn't be read. Focus set it aside,
 started with defaults, and kept the file for inspection; delete it once you no longer need it.
+
+## Permissions vanish after a rebuild
+
+`scripts/build-app.sh` signs ad-hoc when no local identity exists, and macOS ties Camera and
+Accessibility to that signature, so every rebuild loses them. Run `scripts/make-signing-cert.sh`
+once (self-signed, login keychain, this Mac only), then `tccutil reset Camera fr.osho.focus` and
+`tccutil reset Accessibility fr.osho.focus`, rebuild and grant once more; later rebuilds keep them.
