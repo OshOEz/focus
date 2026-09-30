@@ -29,6 +29,8 @@ enum EngineBench {
         ("window-accuracy", { [windowAccuracy()] }),
         ("learning", { [learning()] }),
         ("recalibration-trigger", { [recalibrationTrigger()] }),
+        ("setups-two-places", { let r = setupsTwoPlaces(); return [BenchResult(group: 2, name: "setups-two-places", passed: r.passed, detail: r.detail)] }),
+        ("setups-fingerprint", { [setupsFingerprint()] }),
     ]
 
     static func run() -> [BenchResult] { scenarios.flatMap { $0.run() } }

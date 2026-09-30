@@ -10,6 +10,7 @@ rm -rf "$OUT" && mkdir -p "$OUT"
 # 0. Nothing unattended may call a permission request API.
 grep -rnE '[Rr]equest[A-Za-z]*(Access|Authoriz|Permission)|CGRequest[A-Za-z]+|requestCamera|requestLocation|promptAccessibility|AXIsProcessTrustedWithOptions|kAXTrustedCheckOptionPrompt' \
   Sources/FocusBench Sources/FocusFixture Tests > "$OUT/lint.txt" 2>/dev/null
+copy=$?
 
 # 1. Unit tests.
 swift test > "$OUT/unit.log" 2>&1
@@ -40,4 +41,5 @@ else
 fi
 
 "$B" report --out "$OUT/report.md" --unit-log "$OUT/unit.log" --unit-status "$unit" --lint "$OUT/lint.txt" \
+  --copy "$copy" --copy-log "$OUT/copy.txt" \
   --app "$app" "$OUT/engine.json" "$OUT/vision.json" "$OUT/ax.json"

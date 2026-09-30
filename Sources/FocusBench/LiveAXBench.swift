@@ -25,28 +25,13 @@ enum LiveAXBench {
     }
 
     @MainActor static func run() async -> [BenchResult] {
-        if SystemStateMonitor.screenIsLocked() { return names.map { .skip(group, $0, "screen locked") } }
-        if Permissions.accessibility != .granted {
-            return names.map { .skip(group, $0, "Accessibility not granted to the process running focus-bench (grant it to the terminal)") }
-        }
-        let url = Bundle.main.executableURL!.deletingLastPathComponent().appendingPathComponent("focus-fixture")
-        guard FileManager.default.isExecutableFile(atPath: url.path) else {
-            return names.map { .check(group, $0, false, rule: "fixture present", reason: "focus-fixture not built") }
-        }
-
+        // Captured and restored once, wrapping the whole function: every branch below may call
+        // `paneBenches()`, which launches its own fixture(s) independently of `Run`'s single
+        // long-lived one, so a capture/restore living only around `Run`'s own launch (as this used
+        // to be) never covers what `paneBenches()` does to the frontmost app or the pointer.
         let previous = NSWorkspace.shared.frontmostApplication
         let pointer = CGEvent(source: nil)!.location
-        let proc = Process()
-        proc.executableURL = url
-        proc.arguments = ["--quit-after", "60"]   // never lingers, even if this process dies
-        let pipe = Pipe()
-        proc.standardOutput = pipe
-        do { try proc.run() } catch {
-            return names.map { .check(group, $0, false, rule: "fixture starts", reason: "focus-fixture: \(error)") }
-        }
         defer {
-            proc.terminate()
-            proc.waitUntilExit()
             if let previous {
                 AXUIElementSetAttributeValue(AXUIElementCreateApplication(previous.processIdentifier),
                                              kAXFrontmostAttribute as CFString, kCFBooleanTrue)
@@ -55,6 +40,32 @@ enum LiveAXBench {
             CGWarpMouseCursorPosition(pointer)
             CGAssociateMouseAndMouseCursorPosition(1)
         }
+
+        // Plan 4's pane rows (P4.x) launch their own fixture(s) and never share `Run`'s single
+        // long-lived one, so they're appended after every branch below, not just the happy path.
+        // `paneBenches()` re-checks accessibility and the screen lock itself (it can run with none
+        // of this function's own state, e.g. when `Run` never launches at all).
+        if SystemStateMonitor.screenIsLocked() { return names.map { .skip(group, $0, "screen locked") } + paneBenches() }
+        if Permissions.accessibility != .granted {
+            return names.map { .skip(group, $0, "Accessibility not granted to the process running focus-bench (grant it to the terminal)") } + paneBenches()
+        }
+        let url = Bundle.main.executableURL!.deletingLastPathComponent().appendingPathComponent("focus-fixture")
+        guard FileManager.default.isExecutableFile(atPath: url.path) else {
+            return names.map { .check(group, $0, false, rule: "fixture present", reason: "focus-fixture not built") } + paneBenches()
+        }
+
+        let proc = Process()
+        proc.executableURL = url
+        proc.arguments = ["--quit-after", "60"]   // never lingers, even if this process dies
+        let pipe = Pipe()
+        proc.standardOutput = pipe
+        do { try proc.run() } catch {
+            return names.map { .check(group, $0, false, rule: "fixture starts", reason: "focus-fixture: \(error)") } + paneBenches()
+        }
+        // Safety net only: both paths below already terminate `proc` explicitly, before calling
+        // `paneBenches()` (see there) — a bare `defer` here would fire too late for that (only at
+        // `run()`'s own return, after `paneBenches()` already ran). Idempotent either way.
+        defer { proc.terminate(); proc.waitUntilExit() }
         // Closing the pipe (timeout → terminate) ends the read, so a silent fixture can't hang the bench.
         let handle = pipe.fileHandleForReading
         let reader = Task.detached { () -> String? in
@@ -68,9 +79,21 @@ enum LiveAXBench {
         let line = try? await reader.value
         timeout.cancel()
         guard let line, let fx = try? JSONDecoder().decode(Fixture.self, from: Data(line.utf8)), fx.windows.count == 2 else {
-            return names.map { .check(group, $0, false, rule: "fixture JSON within 10 s", reason: "no fixture JSON: \(line ?? "nothing")") }
+            // Same reasoning as below: whatever's left of this fixture must be gone before
+            // `paneBenches()` launches its own — two live fixtures fighting for frontmost/pointer
+            // is the flakiness risk, not just the happy path.
+            proc.terminate()
+            proc.waitUntilExit()
+            return names.map { .check(group, $0, false, rule: "fixture JSON within 10 s", reason: "no fixture JSON: \(line ?? "nothing")") } + paneBenches()
         }
-        return await Run(fx: fx).all()
+        // `Run`'s fixture must be fully gone before `paneBenches()` launches its own: the outer
+        // `defer`s only fire when `run()` itself returns, i.e. *after* `paneBenches()` already ran,
+        // so without this, two `focus-fixture` processes would be alive and fighting for frontmost
+        // and the pointer at once (audit #30 round 1 — a real flakiness risk, not hypothetical).
+        let runResults = await Run(fx: fx).all()
+        proc.terminate()
+        proc.waitUntilExit()
+        return runResults + paneBenches()
     }
 
     /// Polls every 50 ms; returns the elapsed seconds when `condition` holds, nil on timeout.

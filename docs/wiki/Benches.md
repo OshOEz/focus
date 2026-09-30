@@ -42,7 +42,6 @@ and so does a missing `lint.txt` ("lint not run").
 
 | # | group | what it proves |
 |---|---|---|
-| 0 | no-prompt lint | nothing unattended can prompt |
 | 1 | unit | `swift test` exits 0 (the report lists the test count per bundle) |
 | 2 | engine | the real `FocusEngine` makes the right decisions at the right time on synthetic desks |
 | 3 | vision | GazeKit on fixture images (plan 3a Task 12) |
@@ -71,6 +70,8 @@ first action that lands on the target screen.
 | `window-accuracy` | single, two half windows | 100 seeded fixations ≥ 10 % of the width from the split, 1 s each | accuracy ≥ 0.90 (live target 0.80, spec §1) |
 | `learning` | single | gaze bias (0.06, −0.04); 60 clicks | mean map error over 30 probes halves |
 | `recalibration-trigger` | single | bias (0.3, 0.3), clicks until flagged; control without bias, 60 clicks | flagged within 15 clicks; control never |
+| `setups-two-places` (`SetupScenarios.swift`, plan 5) | — | built-in + Dell at home (SSID "Home"), built-in + LG at the office (no SSID): `SetupResolver.resolve` at each place, a head turn each way, a click learned at home | right screen focused at each place; the click learned at home survives the trip to the office and back; worst switch < 500 ms |
+| `setups-fingerprint` (`SetupScenarios.swift`, plan 5, deferred from plan 5 task 3) | — | `EnvironmentFingerprinter.current(displays: DisplayProvider().fingerprints, cameraID:)` against `CGGetActiveDisplayList` | screens fingerprinted == active screens; camera ID passed through; **`skip`** ("Location not granted…") instead of a check when `Permissions.location != .granted` — reading the Wi-Fi name needs a grant this bench never requests |
 
 A failing row is a finding, not a bench bug: keep the rule, record the numbers, fix the engine (or tune a
 knob with the numbers) test-first. Example (issue #17, 2026-09-30): staring at the seam flipped focus
@@ -169,6 +170,26 @@ Dock by its strip only).
 Otherwise the row is `skip`, naming the covering window, and nothing is posted. This matters: if the fixture dies, clicks at its coordinates land in whatever app is underneath.
 A `defer` always terminates the fixture, re-activates the app that was frontmost, and warps the pointer
 back to where it was. The group takes ~8 s.
+
+**Pane rows (`PaneBench.swift`, `paneBenches()`, plan 4 task 9).** Appended after the rows above,
+regardless of which branch produced them (locked screen, no Accessibility, fixture missing — every path
+still yields all 8 rows, `skip`ped the same way). Each row group launches its own `focus-fixture`, with
+the flags task 8 added to it, and terminates it before the next group:
+
+| row | fixture flags | how | pass rule |
+|---|---|---|---|
+| `P4.1 panes found` | — | `PaneProvider.panes(of:)` on the split window | 2 disjoint panes, left before right, each ≥ 200×150 |
+| `P4.2 walk time` | — | `invalidate()`, then two more calls | first (fresh AX walk) < 50 ms; second (cached) < 1 ms |
+| `P4.3 AX path` | — | `FocusActuator.perform(.pane)` on pane 0, then pane 1 — never a click, to keep the starting state clean | each `perform` true; `pane-focused <i>` within 0.5 s; `focusedPaneIndex == i`; no `pane-clicked` |
+| `P4.4 click path` | `--refuse-ax-focus` | `perform(.pane)` on pane 1, `moveCursor = false`, `InputMonitor` counting clicks | `perform` true; `pane-clicked 1` & `pane-focused 1` within 0.5 s; pointer restored ≤ 1 pt; `onClick` 0; `lastMouse` unchanged |
+| `P4.5 click moves pointer` | `--refuse-ax-focus` | same, `moveCursor = true`, on pane 0 | `perform` true; pointer inside pane 0 right after (then restored) |
+| `P4.6 click disabled` | `--refuse-ax-focus` | `syntheticClickFallback = false`, target whichever pane isn't already focused (an AX request on an already-focused pane would trivially succeed and skip the setting entirely) | `perform` false; no `pane-clicked` within 0.3 s |
+| `P4.7 covered pane` | `--refuse-ax-focus` | the fixture's other window moved (AX `kAXPositionAttribute`) and raised over pane 1's centre; same not-already-focused guard as P4.6 | `perform` false; no `pane-clicked` within 0.3 s |
+| `P4.8 late tree` | `--late-ax` | `panes(of:)` right after launch, then again after 1.2 s | empty at first; 2 panes after 1.2 s (`PaneProvider`'s empty-tree 1 s retry) |
+
+P4.4/P4.5 `skip` instead of `fail` when something other than the fixture already covers the click point
+(a system notification banner, a stray popup) — the same class of real-desktop flakiness `fixtureOnTop`
+above already guards against, not a product defect.
 
 **Findings it caught (2026-09-30).**
 - *Fixture killed by its own timeout.* `try? await Task.sleep` returns at once when the task is
