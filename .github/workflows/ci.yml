@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [dev, staging, prod]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    # What runs without a human or a permission: build, unit tests, the headless engine bench,
+    # the no-prompt lint and the app bundle. The live AX group needs Accessibility and a desktop,
+    # so it stays in scripts/bench.sh on a real Mac.
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select the newest Xcode
+        run: |
+          x=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$x"
+          echo "DEVELOPER_DIR=$x/Contents/Developer" >> "$GITHUB_ENV"   # build-app.sh reads it
+          xcodebuild -version && swift --version
+
+      - name: No permission request in tests or benches
+        run: |
+          if grep -rnE '[Rr]equest[A-Za-z]*(Access|Authoriz|Permission)|CGRequest[A-Za-z]+|requestCamera|requestLocation|promptAccessibility|AXIsProcessTrustedWithOptions|kAXTrustedCheckOptionPrompt' \
+               Sources/FocusBench Sources/FocusFixture Tests; then
+            echo "::error::a test or bench calls a permission request API"; exit 1
+          fi
+
+      - name: Build
+        run: swift build
+
+      - name: Unit tests
+        run: swift test
+
+      - name: Engine bench
+        run: |
+          swift build -c release --product focus-bench
+          .build/release/focus-bench engine --json engine.json
+
+      - name: Vision bench (informative)
+        # Timing targets assume Apple silicon with the Neural Engine; hosted runners are VMs.
+        continue-on-error: true
+        run: .build/release/focus-bench vision --fixtures Tests/GazeKitTests/Fixtures --json vision.json
+
+      - name: App bundle
+        run: scripts/build-app.sh
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bench-results
+          path: "*.json"
