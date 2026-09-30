@@ -5,6 +5,9 @@ on:
   push:
     branches: [dev, staging, prod]
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -20,8 +23,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Select the newest Xcode
+        # Release builds only: a beta or RC on the image must not turn a required check red.
         run: |
-          x=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          x=$(ls -d /Applications/Xcode_*.app | grep -viE 'beta|rc' | sort -V | tail -1)
           sudo xcode-select -s "$x"
           echo "DEVELOPER_DIR=$x/Contents/Developer" >> "$GITHUB_ENV"   # build-app.sh reads it
           xcodebuild -version && swift --version
