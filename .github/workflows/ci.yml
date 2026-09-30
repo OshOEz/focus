@@ -12,6 +12,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash   # explicit bash = -eo pipefail, so `swift test | tee` still fails on a failing test
+
 jobs:
   test:
     # What runs without a human or a permission: build, unit tests, the headless engine bench,
@@ -41,7 +45,8 @@ jobs:
         run: swift build
 
       - name: Unit tests
-        run: swift test
+        timeout-minutes: 10   # the suite takes ~30 s; a hang must fail fast, not hold the runner
+        run: swift test 2>&1 | tee unit.log
 
       - name: Engine bench
         run: |
@@ -60,4 +65,6 @@ jobs:
         if: always()
         with:
           name: bench-results
-          path: "*.json"
+          path: |
+            *.json
+            unit.log
