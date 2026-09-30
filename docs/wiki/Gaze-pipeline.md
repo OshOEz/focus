@@ -116,4 +116,7 @@ FaceMesh and BlazeGaze are CoreML models fetched by `scripts/fetch-models.sh`; s
 
 ## Measured cost
 
-See `Benches.md` (bench group 3, FocusBench) once it's populated.
+Bench group 3 (`focus-bench vision`, release build, `portrait.jpg`, `-c release`): one tracker, 5
+warm-up `process` calls, 60 timed — median 6.1 ms, p95 8.3 ms (M-series Mac, 2026-09-30). Both are
+well under the 20 ms target (the 15 fps camera gives a frame every 67 ms), so `process` itself is
+not the pipeline's latency bottleneck. See `Benches.md` for the full group-3 table.

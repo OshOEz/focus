@@ -1,5 +1,7 @@
 # Tests manuels
 
+Unattended: `scripts/bench.sh` (report in `build/bench/report.md`). Human, each morning: `scripts/morning-check.sh`.
+
 Lancer en release (le debug est ~15× plus lent) depuis un terminal qui a l'accès Caméra.
 
 ## focus-gaze probe

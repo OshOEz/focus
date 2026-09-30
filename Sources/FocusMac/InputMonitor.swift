@@ -4,9 +4,10 @@ import QuartzCore
 
 /// Keyboard and pointer activity without the Input Monitoring permission (Camera +
 /// Accessibility only). Times come from the hardware (HID) idle counters only, so Focus's own
-/// synthetic events (posted from a `.privateState` source — plan 4's pane click fallback, per
-/// controller ruling) never count as user activity; clicks come from NSEvent monitors, only for
-/// their position (learning), which is passed on and not kept.
+/// synthetic events (plan 4's pane click fallback, posted at the session tap: the HID tap
+/// would reset these counters whatever the source state, bench 4) never count as user activity;
+/// clicks come from NSEvent monitors, only for their position (learning), which is passed on and
+/// not kept.
 /// Trade-off: software-injected input from other tools (Screen Sharing, remote control) no longer
 /// resets the idle counters either. `CGWarpMouseCursorPosition` (our own cursor moves) generates
 /// no events either way (CGRemoteOperation.h), so it's unaffected by this choice.

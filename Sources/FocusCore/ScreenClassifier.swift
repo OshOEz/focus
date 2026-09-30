@@ -11,6 +11,11 @@ import Foundation
 /// whatever the setting); going back to the screen just left needs `returnBand` more
 public struct ScreenClassifier: Sendable {
     public static let returnBand = 0.05
+    /// Narrowest facing-edge gap the switch fraction is computed over: 2.5 × minScreenSeparation
+    /// (0.125 rad ≈ 7°). Measured with bench `bezel/*` over head distances 800-2400 pt: 1.5× still
+    /// flips twice on laptop-below, 2× twice at 900 pt, 2.5× never more than once; switch latency
+    /// p50 stays 267 ms (laptop-below p95 267 → 333 ms, one frame, from the wider dead band).
+    public static let minGap = 2.5 * CalibrationBuilder.minScreenSeparation
     public var centroids: [String: PoseFeature]
     public var clouds: [String: [PoseFeature]]
     public var headTurn: Double
@@ -41,8 +46,8 @@ public struct ScreenClassifier: Sendable {
     }
 
     /// Position of `p` between the facing edges of `a`'s and `b`'s clouds along the a→b axis.
-    /// A screen without dots (old calibration) uses its centroid; overlapping clouds fall back to
-    /// centroid-to-centroid so the fraction stays defined.
+    /// A screen without dots (old calibration) uses its centroid; narrow or overlapping gaps are
+    /// widened to `minGap` around their midpoint so the fraction stays defined and noise-proof.
     func gapFraction(_ p: PoseFeature, from a: String, to b: String) -> Double {
         let ca = Self.vector(centroids[a]!), cb = Self.vector(centroids[b]!)
         let axis = zip(cb, ca).map { $0 - $1 }
@@ -53,11 +58,18 @@ public struct ScreenClassifier: Sendable {
         }
         var edgeA = (clouds[a] ?? []).map(project).max() ?? 0
         var edgeB = (clouds[b] ?? []).map(project).min() ?? length
-        // Issue #17: a facing-edge gap this small is calibration-dot noise (pose jitter at rest,
-        // see `CalibrationBuilder.minScreenSeparation`), not a real physical edge — dividing by it
-        // would turn that noise into a hair-trigger switch. Below the floor, fall back to
-        // centroid-to-centroid geometry, same as a display calibrated without dots.
-        if edgeB - edgeA < CalibrationBuilder.minScreenSeparation / 2 { edgeA = 0; edgeB = length }
+        // Issue #17: the hysteresis inside a gap is a fixed share of its width, so a gap only a few
+        // times the pose jitter at rest (σ ≈ 0.01 rad) lets noise alone cross it (edge dots 3 % inside
+        // two screens are only ~0.04-0.06 rad apart at 1-2 m). Narrow gaps are therefore widened
+        // around their midpoint to `minGap`: the boundary stays at the seam, only the dead band grows.
+        // Continuous on purpose: the earlier fallback to centroid geometry below a floor just moved
+        // the cliff (bench `bezel/*`: 5 flips per 10 s stare at the floor/2, then 2 flips at head
+        // distances 1000-1300 pt side-by-side and 1400-1700 pt laptop-below with the full floor).
+        if edgeB - edgeA < Self.minGap {
+            let mid = (edgeA + edgeB) / 2
+            edgeA = max(mid - Self.minGap / 2, 0); edgeB = min(mid + Self.minGap / 2, length)
+            if edgeB - edgeA < 1e-9 { edgeA = 0; edgeB = length }   // midpoint outside the centroid span
+        }
         return (project(p) - edgeA) / (edgeB - edgeA)
     }
 

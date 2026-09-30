@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import FocusCore
 
@@ -115,4 +116,31 @@ private func classifier(headTurn: Double = 0.5) -> ScreenClassifier {
         }
         #expect(flips <= 1, "headTurn \(headTurn): \(flips) flips")
     }
+}
+
+/// Bench `bezel/side-by-side`: edge dots 3 % inside two 1920-pt screens put the facing edges at
+/// ±0.021 rad yaw (head 1800 pt away), ±0.029 at 1300 pt; staring at the seam with rest pose noise
+/// (σ 0.01 rad, through the engine's default GazeSmoother as in use) must not ping-pong at either distance.
+@Test(arguments: [0.021, 0.029])
+func seamStareWithRestNoiseNeverPingPongs(edge: Double) {
+    var state: UInt64 = 42   // SplitMix64 + Box–Muller: seeded so the test is deterministic
+    func uniform() -> Double {
+        state &+= 0x9E37_79B9_7F4A_7C15
+        var z = state
+        z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+        z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+        return Double((z ^ (z >> 31)) >> 11) / Double(1 << 53)
+    }
+    func noise() -> Double { 0.01 * (-2 * log(max(uniform(), .ulpOfOne))).squareRoot() * cos(2 * .pi * uniform()) }
+    let clouds = ["L": [pose(-0.3), pose(-edge)], "R": [pose(edge), pose(0.3)]]
+    var c = ScreenClassifier(centroids: ["L": pose(-0.15), "R": pose(0.15)], clouds: clouds, maxDistance: 0.35)
+    _ = c.classify(pose(-0.15))
+    var smoother = GazeSmoother()
+    var flips = 0, last = "L"
+    for i in 0..<150 {   // 10 s at 15 fps
+        let s = smoother.smooth(GazeSample(time: Double(i) / 15, raw: CGPoint(x: 0.5, y: 0.5), pose: pose(noise()), confidence: 1))
+        let k = c.classify(s.pose)!
+        if k != last { flips += 1; last = k }
+    }
+    #expect(flips <= 1, "edges ±\(edge): \(flips) flips")
 }

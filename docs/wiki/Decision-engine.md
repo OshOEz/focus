@@ -116,6 +116,15 @@ decision boundary to where the screens' bezels actually are, instead of leaving 
 between two averages that can sit closer together (angled monitors) or farther apart (monitors with
 very different eye distances) than the physical seam.
 
+*Minimum gap*: the hysteresis is a fixed share of the gap, so a gap only a few times the pose jitter
+at rest (σ ≈ 0.01 rad) lets noise alone cross it — and edge dots 3 % inside two screens are only
+0.04–0.06 rad apart at 1–2 m. Any facing-edge gap narrower than `ScreenClassifier.minGap`
+(2.5 × `CalibrationBuilder.minScreenSeparation` = 0.125 rad ≈ 7°) is widened to it around its
+midpoint: the boundary stays at the seam, only the dead band grows, and it is continuous (no cliff).
+Bench `bezel/*` pins it (docs/wiki/Benches.md). History: floor/2 fallback → 5 flips per 10 s stare
+at 1800 pt; a full-floor fallback to centroids → 0 there but 2-3 flips at 1000-1700 pt; widening →
+≤ 1 flip from 800 to 2400 pt. Switch latency p50 267 ms throughout (laptop-below p95 267 → 333 ms).
+
 ## 4. Guards
 
 `InputActivity` (`Sources/FocusCore/Settings.swift`) tracks only the *time* of the last key and
@@ -172,3 +181,5 @@ re-proposed every frame.
 The app layers its own states in front of these (`AppStatus`, `Sources/FocusCore/AppStatus.swift`):
 paused, screen locked, camera/accessibility permissions, camera unavailable — all of which mean the
 engine isn't even running, so they take priority over anything `EngineStatus` would say.
+
+Benches: [group 2 engine scenarios](Benches.md#group-2-engine-scenarios), end-to-end through FocusMac in [group 4](Benches.md#group-4-live-ax-liveaxbenchswift-focus-fixture).

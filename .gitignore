@@ -5,3 +5,4 @@ DerivedData/
 *.xcodeproj/xcuserdata/
 .DS_Store
 Assets/Downloaded/
+build/

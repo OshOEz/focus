@@ -106,6 +106,23 @@ action every frame.
 Code: `Sources/FocusCore/PaneFinder.swift`, `PaneClick.swift`; `Sources/FocusMac/PaneProvider.swift`,
 `FocusActuator.swift` (the `.pane` branch); wiring in `Sources/FocusApp/AppController.swift`.
 
+Occluders (R11): every window above the target, any layer, other processes, alpha > 0. **R11 note — the
+Dock.** The Dock owns an always-on, click-through window spanning the whole display at layer 20 with
+alpha 1; counted as is, it covers every point and no pane click is ever posted (bench 4, 2026-09-30).
+So that one window (recognised by bounds equal to a display frame **and** layer 20; Launchpad and
+Mission Control, which also have the size of a display, sit at a different layer and stay occluders,
+audit #27) is dropped and replaced, when it is above the target, by the Dock's real strip per screen:
+the side of `NSScreen.frame` that `visibleFrame` gives up (bottom, left or right; the top gap is
+the menu bar), flipped to global CG coordinates (`FocusActuator.dockStrip`). Auto-hide = no strip. The
+strip spans the whole side, not the bar's exact length: it errs on "blocked".
+
+The click must not look like the user. It comes from a `.privateState` source, carries the marker
+`0x464F4355` (InputMonitor's click monitors drop it, R10), and is posted at **`.cgSessionEventTap`**.
+Not the HID tap: an event posted at `.cghidEventTap` enters the `.hidSystemState` idle counters
+whatever its source state, so the click would reset the mouse-quiet window InputMonitor reads
+(bench 4, 2026-09-30: `leftMouseDown` idle 97.9 s → 0.16 s at the HID tap; at the session tap the click
+is delivered and the counter keeps running).
+
 ### 1. Which apps
 
 Split-pane focus is allow-listed: 16 terminals and editors —
@@ -166,3 +183,5 @@ window-focus click setting, see reconciliation R2). Both reach `FocusActuator`/`
 - Verifying AX focus or a click can block the MainActor up to about 250 ms per pane switch (two
   bounded polls); rare and user-paced, but see the `waitUntil` doc comment in `FocusActuator` if gaze
   frames start dropping around pane switches.
+
+Benches: [group 4 live AX](Benches.md#group-4-live-ax-liveaxbenchswift-focus-fixture) checks all of this against a fixture app.

@@ -91,19 +91,11 @@ import QuartzCore
         guard let above = CGWindowListCopyWindowInfo([.optionOnScreenAboveWindow, .excludeDesktopElements], window)
                 as? [[String: Any]],
               let p = PaneClick.point(for: frame, window: window, world: world, settings: settings,
-                                      occluders: Self.occluders(in: above, excludingPID: getpid(), window: window))
+                                      occluders: Self.occluders(in: above, excludingPID: getpid(), window: window,
+                                                                dockStrips: Self.dockStrips(), displayFrames: Self.displayFrames()))
         else { return false }
         let saved = CGEvent(source: nil)?.location
-        // .privateState: the click never enters the .hidSystemState idle counters InputMonitor
-        // reads, and the marker lets its NSEvent click monitors drop it (R10).
-        let source = CGEventSource(stateID: .privateState)
-        for type in [CGEventType.leftMouseDown, .leftMouseUp] {
-            guard let e = CGEvent(mouseEventSource: source, mouseType: type, mouseCursorPosition: p, mouseButton: .left)
-            else { return false }
-            e.setIntegerValueField(.mouseEventClickState, value: 1)
-            e.setIntegerValueField(.eventSourceUserData, value: InputMonitor.syntheticMarker)
-            e.post(tap: .cghidEventTap)
-        }
+        guard Self.postMarkedClick(at: p) else { return false }
         usleep(20_000)   // one tick for the window server to take down/up before the pointer restore
         let ok = waitUntil(0.15, focused)
         // Restore only after the wait: the posted events move the pointer when the window server
@@ -116,13 +108,74 @@ import QuartzCore
     /// Focus's own windows, the target and alpha-0 windows (invisible full-screen overlays of other
     /// tools would otherwise block every click). Callers pass windows above the target only —
     /// anything below it cannot receive the click, and counting it would refuse most clicks.
-    nonisolated static func occluders(in raw: [[String: Any]], excludingPID pid: pid_t, window: UInt32) -> [CGRect] {
-        raw.compactMap { w in
-            guard (w[kCGWindowOwnerPID as String] as? pid_t) != pid, (w[kCGWindowNumber as String] as? UInt32) != window,
+    /// The Dock is special: alongside its real UI (bar, stack popup, running-apps menu — ordinary
+    /// occluders), it owns an always-on, click-through window spanning the whole display at layer 20
+    /// with alpha 1 (bench 4, 2026-09-30), which would block every click. Only that one window is
+    /// recognised — by its bounds matching a display's frame exactly AND its layer being exactly 20,
+    /// the value observed for the permanent window on this machine — and dropped; `dockStrips` (its
+    /// real bar, see `dockStrip`) count in its place when it is above. Launchpad and Mission Control
+    /// also span a whole display and are owned by the Dock, but sit at a different layer (audit #27):
+    /// the layer check keeps them as occluders, so a pane click never lands on them.
+    public nonisolated static func occluders(in raw: [[String: Any]], excludingPID pid: pid_t, window: UInt32,
+                                             dockStrips: [CGRect] = [], displayFrames: [CGRect] = []) -> [CGRect] {
+        let isInvisibleDockWindow = { (w: [String: Any]) -> Bool in
+            guard w[kCGWindowOwnerName as String] as? String == "Dock",
+                  w[kCGWindowLayer as String] as? Int == 20,
+                  let b = w[kCGWindowBounds as String] as? NSDictionary, let bounds = CGRect(dictionaryRepresentation: b)
+            else { return false }
+            return displayFrames.contains(bounds)
+        }
+        return raw.compactMap { w in
+            guard !isInvisibleDockWindow(w), (w[kCGWindowOwnerPID as String] as? pid_t) != pid,
+                  (w[kCGWindowNumber as String] as? UInt32) != window,
                   (w[kCGWindowAlpha as String] as? Double ?? 1) > 0,
                   let b = w[kCGWindowBounds as String] as? NSDictionary else { return nil }
             return CGRect(dictionaryRepresentation: b)
+        } + (raw.contains(where: isInvisibleDockWindow) ? dockStrips : [])
+    }
+
+    /// The Dock's bar on one screen, in global CG coordinates: the side of `frame` that
+    /// `visibleFrame` gives up (Cocoa, bottom-left origin; `primaryHeight` flips y). The top gap is
+    /// the menu bar, never the Dock; an auto-hidden Dock gives up nothing → nil. Full width/height
+    /// of that side, not the bar's exact length (unknown without private API): errs on "blocked".
+    public nonisolated static func dockStrip(frame f: CGRect, visibleFrame v: CGRect, primaryHeight: CGFloat) -> CGRect? {
+        let cocoa: CGRect
+        if v.minY > f.minY { cocoa = CGRect(x: f.minX, y: f.minY, width: f.width, height: v.minY - f.minY) }
+        else if v.minX > f.minX { cocoa = CGRect(x: f.minX, y: f.minY, width: v.minX - f.minX, height: f.height) }
+        else if v.maxX < f.maxX { cocoa = CGRect(x: v.maxX, y: f.minY, width: f.maxX - v.maxX, height: f.height) }
+        else { return nil }
+        return CGRect(x: cocoa.minX, y: primaryHeight - cocoa.maxY, width: cocoa.width, height: cocoa.height)
+    }
+
+    /// `dockStrip` for every screen (only the one showing the Dock has one).
+    public static func dockStrips() -> [CGRect] {
+        let h = NSScreen.screens.first?.frame.height ?? 0
+        return NSScreen.screens.compactMap { dockStrip(frame: $0.frame, visibleFrame: $0.visibleFrame, primaryHeight: h) }
+    }
+
+    /// Every screen's full frame in the same global CG coordinates `dockStrip` converts into (Cocoa
+    /// bottom-left → CG top-left, flipped against the primary screen's height): what `occluders`
+    /// matches the Dock's invisible full-display window against.
+    public static func displayFrames() -> [CGRect] {
+        let h = NSScreen.screens.first?.frame.height ?? 0
+        return NSScreen.screens.map { CGRect(x: $0.frame.minX, y: h - $0.frame.maxY, width: $0.frame.width, height: $0.frame.height) }
+    }
+
+    /// The pane-click fallback's posting (R10, bench 4), shared verbatim with focus-bench so its
+    /// probe matches exactly what ships: a `.privateState` source keeps our synthetic flags out of
+    /// the user's modifier state, the marker lets InputMonitor's NSEvent click monitors drop it, and
+    /// the session tap (not HID) keeps the click off the .hidSystemState idle counters InputMonitor
+    /// reads (2026-09-30: an HID-tap post reset the leftMouseDown idle 97.9 s → 0.16 s).
+    public static func postMarkedClick(at p: CGPoint) -> Bool {
+        let source = CGEventSource(stateID: .privateState)
+        for type in [CGEventType.leftMouseDown, .leftMouseUp] {
+            guard let e = CGEvent(mouseEventSource: source, mouseType: type, mouseCursorPosition: p, mouseButton: .left)
+            else { return false }
+            e.setIntegerValueField(.mouseEventClickState, value: 1)
+            e.setIntegerValueField(.eventSourceUserData, value: InputMonitor.syntheticMarker)
+            e.post(tap: .cgSessionEventTap)
         }
+        return true
     }
 
     /// Polls `condition` every 20 ms for up to `seconds`.
