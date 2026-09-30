@@ -46,6 +46,7 @@ extension FocusSettings {
         read(.syntheticClickFallback, &syntheticClickFallback); read(.learnFromClicks, &learnFromClicks)
         read(.windowStickMargin, &windowStickMargin); read(.paneBoundaryMargin, &paneBoundaryMargin)
         read(.minWindowSize, &minWindowSize)
+        paneDwell = min(max(paneDwell, 0.2), 1.5)   // range 200-1500 ms; guards hand-edited JSON
     }
 }
 

@@ -15,3 +15,16 @@ import Testing
     #expect(!PaneApps.isAllowed("com.apple.Safari"))
     #expect(!PaneApps.isAllowed(""))
 }
+
+@Test func allowsEveryListedAppPlusXirp() {
+    #expect(PaneApps.isAllowed("com.microsoft.VSCodeInsiders"))
+    #expect(PaneApps.isAllowed("com.spotify.xirp"))
+    #expect(PaneApps.bundleIDs.count == 17)
+}
+
+@Test func rejectsNearMisses() {
+    #expect(!PaneApps.isAllowed("com.jetbrains"))
+    #expect(!PaneApps.isAllowed("com.jetbrainsfake.ide"))
+    #expect(!PaneApps.isAllowed("org.com.jetbrains.intellij"))
+    #expect(!PaneApps.isAllowed("com.microsoft.VSCode.helper"))
+}
