@@ -97,3 +97,13 @@ private func find(_ window: N, _ t: PaneTree<N> = tree(), maxNodes: Int = 3000) 
     // budget still pays for one `frame` read per remaining sibling.
     #expect(c.frameCalls <= 10)
 }
+
+@Test func dialogOverThePanesIsNotAPane() {
+    // Xirp's update popup: a web dialog on top of a two-terminal grid (ax-dump, 2026-09-30).
+    let full = r(0, 33, 1512, 859)
+    let left = N(frame: r(263, 189, 551, 223), focusable: true)
+    let right = N(frame: r(827, 189, 660, 223), focusable: true)
+    let dialog = N(role: "AXApplicationDialog", frame: r(532, 357, 448, 212), focusable: true)
+    let web = N(role: "AXWebArea", frame: full, focusable: true, kids: [N(frame: full, kids: [left, right, dialog])])
+    #expect(find(N(role: "AXWindow", frame: full, kids: [web])) == [r(263, 189, 551, 223), r(827, 189, 660, 223)])
+}

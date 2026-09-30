@@ -44,7 +44,12 @@ public enum PaneFinder {
             let visible = tree.frame(n).map { $0.intersection(clip) } ?? clip
             guard !visible.isNull, visible.width >= minSize.width, visible.height >= minSize.height
             else { return ([], false) }
-            let isWeb = !inWeb && tree.role(n) == "AXWebArea"
+            let role = tree.role(n)
+            // A dialog floats over the panes (Xirp's update popup: AXGroup/AXApplicationDialog over
+            // both terminals). Counted as a pane it overlaps its neighbours, so no pane click is ever
+            // safe while it is up, and it is never somewhere the user wants to type.
+            if role == "AXApplicationDialog" { return ([], false) }
+            let isWeb = !inWeb && role == "AXWebArea"
             var found: [Pane] = []
             for child in tree.children(n) {
                 guard budget >= 0 else { break }   // stop descending the moment the budget is spent

@@ -37,8 +37,12 @@ extension AXUIElement {
 }
 
 extension PaneTree where Node == AXUIElement {
-    /// "Focusable" = the AXFocused attribute is settable (what the spike measured).
+    /// "Focusable" = the AXFocused attribute is settable (what the spike measured). Web dialogs are
+    /// AXGroups told apart only by subrole, so the role reads the subrole for groups.
     public static var ax: PaneTree<AXUIElement> {
-        PaneTree(role: { $0.role }, frame: { $0.frame }, isFocusable: { $0.isFocusSettable }, children: { $0.children })
+        PaneTree(role: { e in
+            let r = e.role
+            return r == "AXGroup" && e.attribute(kAXSubroleAttribute) as? String == "AXApplicationDialog" ? "AXApplicationDialog" : r
+        }, frame: { $0.frame }, isFocusable: { $0.isFocusSettable }, children: { $0.children })
     }
 }
