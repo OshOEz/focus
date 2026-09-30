@@ -98,6 +98,7 @@ DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
         let raw = CGWindowListCopyWindowInfo([.optionOnScreenOnly], kCGNullWindowID) as? [[String: Any]] ?? []
         let onScreen = raw.filter { ($0[kCGWindowOwnerPID as String] as? pid_t) == getpid() && ($0[kCGWindowLayer as String] as? Int) == 0 }
         let listed = WindowProvider().windows().filter { ids.contains($0.id) }
+        // try!: every value below is a literal Int/String/Array, all JSON-safe; encoding cannot fail.
         let data = try! JSONSerialization.data(withJSONObject: ["pid": getpid(), "windows": list,
                                                                 "selfOnScreen": onScreen.count, "selfListed": listed.count])
         print(String(data: data, encoding: .utf8)!)

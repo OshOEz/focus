@@ -262,3 +262,20 @@ head turn, "no face" under a hand), `focus-gaze screens` with ≥ 2 displays, th
 
 See also: [Decision engine](Decision-engine.md) (what group 2 exercises) ·
 [Focusing windows and panes](Focusing-windows-and-panes.md) (what group 4 exercises).
+
+## Results — 2026-09-30, commit 1b76f98
+
+`scripts/bench.sh` on macOS 27.0 (Build 26A428): **84 pass · 0 fail · 2 skip**. Full report:
+`build/bench/report.md` (raw JSON per group alongside it).
+
+| Bench | Result | Key numbers | Skipped because |
+|---|---|---|---|
+| 1 Unit | PASS | `swift test` exit 0 — 12 tests (FocusMacTests) + 17 (GazeKitTests) + 160 (FocusCoreTests), 3 bundles | — |
+| 2 Engine scenarios | PASS (53/54; 1 skip) | switch-latency p50 267 ms / p95 267-333 ms (laptop-below); bezel ≤ 1 switch everywhere; window-accuracy 1.0; learning error 0.071 → 0.018 (75 % drop, target ≤ 50 %); recalibration-trigger flagged at 10 clicks; `screen-choice/laptop-below` 39/1815 wrong (2.1 %, known limit ≤ 3 %); `setups-two-places` right screen both places, learned click kept, worst switch 400 ms | `setups-fingerprint`: Location not granted (Wi-Fi name unavailable without a prompt) |
+| 3 Vision | PASS (6/7; 1 skip) | `ms-per-frame` median 6.1 ms / p95 6.8 ms (release, target < 20 ms); frontal/shift/scale/roll/no-face all pass | `yaw-follows-turn`: always-skip by design (a still photo can't turn a head; checked live by `scripts/morning-check.sh`) |
+| 4 Live AX | PASS | `world-build-latency` p95 2.55 ms (target < 33 ms); both `focus-window-*` and `display-restores-last-window` ≤ 12 ms; `e2e-scripted-gaze` 345/481 ms both ways (target ≤ 1.5 s); all 8 pane rows (P4.1-P4.8) pass, including the click fallback and the late-AX-tree retry | — |
+| 5 App smoke | PASS | `scripts/build-app.sh` + `Focus --selftest` exit 0 | — |
+
+Both skips are expected, not incidental: `setups-fingerprint` needs a Location grant this bench never
+requests (see "The no-prompt rule" above); `yaw-follows-turn` is `.skip` by design (H-10,
+[Decisions](Decisions.md)). No failures, no findings this run.

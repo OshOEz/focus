@@ -45,6 +45,8 @@ func _AXUIElementGetWindow(_ element: AXUIElement, _ id: UnsafeMutablePointer<CG
     /// which only updates while a run loop is pumping notifications.
     public func focusedWindowID() -> UInt32? {
         let system = AXUIElementCreateSystemWide()
+        // Force-cast, not `AX.swift`'s checked pattern: kAXFocused*Attribute are documented by Apple
+        // to always return an AXUIElement, unlike a generic attribute read.
         guard let app = copy(system, kAXFocusedApplicationAttribute),
               let window = copy(app as! AXUIElement, kAXFocusedWindowAttribute) else { return nil }
         var id: CGWindowID = 0
