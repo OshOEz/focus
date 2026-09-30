@@ -6,6 +6,7 @@ import GazeKit
 
 // focus-gaze probe [secondes]  — affiche le regard brut et la pose ~2 fois par seconde
 // focus-gaze screens           — calibre la pose de tête par écran puis affiche en direct l'écran regardé
+// focus-gaze cameras           — liste les caméras disponibles (jamais de prompt)
 
 func fail(_ message: String) -> Never {
     FileHandle.standardError.write(Data((message + "\n").utf8))
@@ -19,10 +20,20 @@ func deg(_ radians: Double) -> String { f(radians * 180 / .pi, 1) + "°" }
 func run() async {
     let args = Array(CommandLine.arguments.dropFirst())
     let mode = args.first ?? "probe"
-    guard mode == "probe" || mode == "screens" else { fail("usage: focus-gaze probe [secondes] | screens") }
+    guard mode == "probe" || mode == "screens" || mode == "cameras" else {
+        fail("usage: focus-gaze probe [secondes] | screens | cameras")
+    }
+
+    if mode == "cameras" {
+        for d in CameraCapture.devices() {
+            print("\(d.id)  \(d.name)" + (d.isBuiltIn ? "  (intégrée)" : ""))
+        }
+        return
+    }
 
     let tracker: GazeTracker
     do { tracker = try GazeTracker() } catch { fail("Modèles introuvables : \(error)") }
+    guard await CameraCapture.requestAccess() else { fail("Caméra refusée : Réglages Système > Confidentialité > Caméra pour ton terminal.") }
     let stream: AsyncStream<GazeSample>
     do { stream = try await tracker.start() } catch {
         fail("Caméra indisponible : \(error). Vérifie Réglages Système > Confidentialité > Caméra pour ton terminal.")
@@ -39,6 +50,7 @@ func run() async {
             let now = CACurrentMediaTime()
             guard now - lastPrint >= 0.5 else { continue }
             lastPrint = now
+            if s.confidence == 0 { print("no face"); continue }
             print("raw=(\(f(s.raw.x)), \(f(s.raw.y))) yaw=\(deg(s.pose.yaw)) pitch=\(deg(s.pose.pitch)) "
                 + "face=(\(f(s.pose.faceX)), \(f(s.pose.faceY))) conf=\(f(s.confidence)) lag=\(f((now - s.time) * 1000, 0))ms")
         }
